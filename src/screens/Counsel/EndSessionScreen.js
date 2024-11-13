@@ -1,8 +1,9 @@
 // 상담 종료 페이지
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
-import LoadingDots from "react-native-loading-dots";
-import ButtonCustom from '../../components/button/ButtonCustom';
+import MainButton from '../../components/button/MainButton';
+import SummaryProgress from '../../components/SummaryProgress';
+import SummaryComplete from '../../components/SummaryComplete';
 
 function EndSessionScreen() {
   return (
@@ -18,20 +19,27 @@ function EndSessionScreen() {
         </Text>
         <Text style={styles.statusText}>상담이 종료되었습니다.</Text>
         <View style={styles.summaryContainer}>
-          <View style={styles.dotsWrapper}>
-            <LoadingDots />
-          </View>
-          <View style={styles.summaryTextContainer}>
-            <Text style={styles.summaryText}>현재 상담 내용이</Text>
-            <Text style={styles.summaryText}>요약되고 있습니다.</Text>
-          </View>
+          {/* <SummaryProgress /> */}
+          <SummaryComplete />
         </View>
       </View>
-      <View style={styles.homeButton}>
-        <ButtonCustom
+      {/* <View>
+        <MainButton
           title="홈 화면으로 이동"
+          style={styles.homeButton}
         >  
-        </ButtonCustom>
+        </MainButton>
+      </View> */}
+      <View style={styles.buttonContainer}>
+        <MainButton
+          title="홈 화면"
+          backgroundColor="#FFFFFF"
+          style={styles.button}
+        />
+        <MainButton
+          title="상담 요약 이동"
+          style={styles.button}
+        />
       </View>
     </View>
   );
@@ -42,8 +50,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
     paddingHorizontal: 50,
-    paddingVertical: 20,
-    backgroundColor: '#FFFFFF'
+    paddingVertical: 25,
+    backgroundColor: '#FFFFFF',
   },
   content: {
     alignItems: 'center',
@@ -55,11 +63,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderColor: '#000000',
     borderWidth: 1,
-    marginBottom: 10
+    marginBottom: 10,
   },
   nameContainer: {
     fontSize: 20,
-    marginBottom: 5
+    marginBottom: 5,
   },
   nameText: {
     fontWeight: 'semibold',
@@ -71,7 +79,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 15,
     textAlign: 'center',
-    marginBottom: 20,
   },
   summaryContainer: {
     flex: 1,
@@ -80,27 +87,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderColor: '#BDBDBD',
     borderWidth: 2,
-    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-  },
-  dotsWrapper: {
-    width: 100,
-    marginBottom: 35,
-  },
-  summaryTextContainer: {
-    marginBottom: 20,
-  },
-  summaryText: {
-    fontSize: 16,
-    textAlign: 'center',
-
+    marginVertical: 30,
   },
   homeButton: {
     width: '100%',
     alignItems: 'center',
-    paddingVertical: 20,
-    backgroundColor: '#FFFFFF'
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 12,
+  },
+  button: {
+    flex: 1,
   },
 });
 
