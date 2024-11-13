@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "209164735530",
+    "project_id": "kbsf-a4ebe",
+    "storage_bucket": "kbsf-a4ebe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209164735530:android:d8c206bdc3305864825f53",
+        "android_client_info": {
+          "package_name": "com.yl3k"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkt4xsrPT69pT1fJu295DNXfDsY4Jr0vQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
