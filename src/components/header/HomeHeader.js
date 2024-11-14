@@ -7,17 +7,17 @@ const HomeHeader = () => {
     <View style={styles.headerContainer}>
       {/* 알림 버튼 */}
       <TouchableOpacity style={styles.iconButton}>
-        <Icon name="notifications" size={24} color="#495057" />
+        <Icon name="notifications" size={24} color="#000000" />
       </TouchableOpacity>
 
       {/* 상담 버튼 */}
       <TouchableOpacity style={styles.iconButton}>
-        <Icon name="headset-mic" size={24} color="#495057" />
+        <Icon name="headset-mic" size={24} color="#000000" />
       </TouchableOpacity>
 
       {/* 메뉴 버튼 */}
       <TouchableOpacity style={styles.iconButton}>
-        <Icon name="menu" size={24} color="#495057" />
+        <Icon name="menu" size={24} color="#000000" />
       </TouchableOpacity>
     </View>
   );
@@ -29,6 +29,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
     padding: 15,
+    backgroundColor: '#EEF3F9',
   },
   iconButton: {
     alignItems: 'center',
