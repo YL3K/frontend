@@ -1,31 +1,35 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import HomeScreen from '../screens/HomeScreen';
 import AnalysisScreen from '../screens/AnalysisScreen';
+import LogoHeader from '../components/header/LogoHeader';
+import HomeHeader from '../components/header/HomeHeader';
 
 const Tab = createBottomTabNavigator();
 
 function MainTabNavigator() {
   return (
     <Tab.Navigator
-    screenOptions={{
-      tabBarStyle: {
-        height: 66,
-        paddingBottom: 8,
-        paddingTop: 8,
-      },
-      tabBarLabelStyle: {
-        fontSize: 10,
-        color: '#495057',
-      },
-      headerShown: false,
-    }}
-  >
+      screenOptions={{
+        tabBarStyle: {
+          height: 66,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          color: '#495057',
+        },
+        header: () => <LogoHeader />  // 전체 탭에 대해 상단바를 숨김
+      }}
+    >
       <Tab.Screen
         name="홈"
         component={HomeScreen}
         options={{
+          header: () => <HomeHeader />,
           tabBarIcon: ({ color, size}) => (
             <Icon name="home" color='#495057' size={size} />
           ),
@@ -85,5 +89,21 @@ function MainTabNavigator() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  logo: {
+    width: 120,
+    height: 40,
+    resizeMode: 'contain',
+  },
+});
 
 export default MainTabNavigator;
