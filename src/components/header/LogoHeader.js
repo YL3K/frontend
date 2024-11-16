@@ -1,9 +1,17 @@
 import React from 'react';
-import { View, Image, StyleSheet, Text } from 'react-native';
+import { View, Image, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 
 function LogoHeader() {
+  const navigation = useNavigation();
+  
   return (
     <View style={styles.headerContainer}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Icon name="arrow-back" size={24} color="#000000" />
+      </TouchableOpacity>
       <Image source={require('../../assets/logo.png')} style={styles.logo} />
       <Text style={styles.headerText}>KB스타후르츠뱅킹</Text>
     </View>
@@ -17,8 +25,10 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: '#fff',
-    //   borderBottomWidth: 1,
-    //   borderBottomColor: '#ddd',
+    },
+    backButton: {
+      position: 'absolute',
+      left: 10,
     },
     logo: {
       width: 40,
