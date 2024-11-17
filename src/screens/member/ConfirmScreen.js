@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ReusableModal from '../../components/ReusableModal';
+import ReusableModal from '../../components/modal/ReusableModal';
 import axios from 'axios';
 
 // 약관 데이터 배열
