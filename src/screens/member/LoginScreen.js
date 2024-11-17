@@ -5,6 +5,8 @@ import ReusableModal from '../../components/modal/ReusableModal';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { loadUser } from '../../actions/userActions';
+import { setFcmToken } from '../../actions/fcmTokenActions';
+import messaging from '@react-native-firebase/messaging';
 
 function LoginScreen({ navigation }) {
   const [loginId, setLoginId] = useState('');
@@ -34,6 +36,10 @@ function LoginScreen({ navigation }) {
   
         // 토큰을 저장하고, Redux에 사용자 정보 저장
         dispatch(loadUser(userInfo));
+
+        const token = await messaging().getToken();
+        dispatch(setFcmToken(token));
+
         setSuccessModalVisible(true);
 
       } catch (error) {
