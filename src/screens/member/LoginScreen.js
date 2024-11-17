@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ReusableModal from '../../components/ReusableModal';
+import ReusableModal from '../../components/modal/ReusableModal';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { loadUser } from '../../actions/userActions';

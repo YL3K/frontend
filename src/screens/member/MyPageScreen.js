@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ReusableModal from '../../components/ReusableModal';
+import ReusableModal from '../../components/modal/ReusableModal';
 import { useSelector, useDispatch } from 'react-redux';
 import { logoutUser } from '../../actions/userActions'; // 액션 불러오기
 

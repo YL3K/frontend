@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import axios from 'axios';
 import MainButton from '../../components/button/MainButton';
-import SummaryProgress from '../../components/SummaryProgress';
-import SummaryComplete from '../../components/SummaryComplete';
+import SummaryProgress from '../../components/summary/SummaryProgress';
+import SummaryComplete from '../../components/summary/SummaryComplete';
 
 function EndSessionScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
