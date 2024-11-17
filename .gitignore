@@ -23,7 +23,6 @@ DerivedData
 **/.xcode.env.local
 
 # Android/IntelliJ
-#
 build/
 .idea
 .gradle
@@ -72,3 +71,38 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# iOS 관련 디렉토리 및 파일 무시
+ios/
+ios/YL3K.xcworkspace/project.pbxprojs
+!ios/Podfile
+!ios/Podfile.lock
+!ios/*.xcodeproj
+!ios/*.xcworkspace
+!ios/AppDelegate.*
+!ios/Info.plist
+
+# Xcode에 의해 생성되는 빌드 파일 및 설정 무시
+*.xcworkspace
+*.xcuserstate
+ios/Pods/
+ios/build/
+ios/*.xcconfig
+ios/*.xcuserdatad
+ios/DerivedData/
+ios/.DS_Store
+ios/*.plist
+xcuserdata/
+*.mode1v3
+*.mode2v3
+*.pbxuser
+*.xcscmblueprint
+
+# Swift Package Manager
+.idea/
+.swiftpm/
+Package.resolved
+
+# CococaPods 관련 파일 무시
+ios/Pods/
+ios/Podfile.lock
