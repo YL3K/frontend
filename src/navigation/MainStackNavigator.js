@@ -6,19 +6,25 @@ import CounselNavigator from './Stack/CounselNavigator';
 import RecordNavigator from './Stack/RecordNavigator';
 import SettingsScreen from '../screens/SettingsScreen';
 import CounterScreen from '../screens/CounterScreen';
+import AnalysisScreen from '../screens/AnalysisScreen';
+import LogoHeader from '../components/header/LogoHeader';
 
 const Stack = createStackNavigator();
 
 function MainStackNavigator() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="Main" component={MainTabNavigator} options={{ headerShown: false }} />
-      <Stack.Screen name="Member" component={MemberNavigator} options={{ headerShown: false }} />
-      <Stack.Screen name="Counsel" component={CounselNavigator} options={{ headerShown: false }} />
-      <Stack.Screen name="Record" component={RecordNavigator} options={{ headerShown: false }} />
-      {/* 예시 */}
+    <Stack.Navigator
+      screenOptions={{
+        header: () => <LogoHeader />,  // 기본 상단 헤더를 LogoHeader로 설정
+      }}
+    >
+      <Stack.Screen name="Main" component={MainTabNavigator} options={{headerShown: false}}/>
+      <Stack.Screen name="Member" component={MemberNavigator} />
+      <Stack.Screen name="Counsel" component={CounselNavigator} />
+      <Stack.Screen name="Record" component={RecordNavigator} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Counter" component={CounterScreen} />
+      <Stack.Screen name="Analysis" component={AnalysisScreen} />
     </Stack.Navigator>
   );
 }
