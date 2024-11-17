@@ -98,9 +98,6 @@ function LoginScreen({ navigation }) {
         <Text style={styles.signUpLink} onPress={() => navigation.navigate('SignUp')}>회원가입</Text>
       </Text>
 
-      {/* Navigation Buttons */}
-      <Button title="Go to Mypage" onPress={() => navigation.navigate('Mypage')} />
-
       {/* 성공 모달 */}
       <ReusableModal
         isVisible={isSuccessModalVisible}

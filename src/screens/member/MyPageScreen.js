@@ -14,7 +14,7 @@ function MyPageScreen({ navigation }) {
 
   const closeModal = () => {
     // setModalVisible(false);
-    navigation.navigate('Main');
+    navigation.navigate('Login');
   };
 
   const handleLogout = () => {
@@ -63,7 +63,7 @@ function MyPageScreen({ navigation }) {
         isVisible={isModalVisible}
         onClose={closeModal}
         title="로그아웃"
-        content="로그아웃에 성공하였습니다.<br/>홈으로 이동합니다."
+        content="로그아웃에 성공하였습니다.<br/>로그인 페이지로 이동합니다."
       />
     </View>
   );
