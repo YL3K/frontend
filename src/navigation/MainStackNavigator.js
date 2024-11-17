@@ -18,8 +18,8 @@ function MainStackNavigator() {
         header: () => <LogoHeader />,  // 기본 상단 헤더를 LogoHeader로 설정
       }}
     >
-      <Stack.Screen name="Main" component={MainTabNavigator} options={{headerShown: false}}/>
       <Stack.Screen name="Member" component={MemberNavigator} />
+      <Stack.Screen name="Main" component={MainTabNavigator} options={{headerShown: false}}/>
       <Stack.Screen name="Counsel" component={CounselNavigator} />
       <Stack.Screen name="Record" component={RecordNavigator} />
       <Stack.Screen name="Settings" component={SettingsScreen} />

@@ -10,10 +10,10 @@ const Stack = createStackNavigator();
 function MemberNavigator() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="SignUp" component={SignUpScreen} />
-      <Stack.Screen name="Confirm" component={ConfirmScreen} />
-      <Stack.Screen name="Mypage" component={MyPageScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} options={{headerShown: false}} />
+      <Stack.Screen name="SignUp" component={SignUpScreen} options={{headerShown: false}} />
+      <Stack.Screen name="Confirm" component={ConfirmScreen} options={{headerShown: false}} />
+      <Stack.Screen name="Mypage" component={MyPageScreen} options={{headerShown: false}} />
     </Stack.Navigator>
   );
 }

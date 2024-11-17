@@ -10,10 +10,10 @@ function HomeScreen({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         {/* 헤더 */}
-        <View style={styles.header}>
+        <TouchableOpacity  style={styles.header} onPress={() => navigation.navigate('Member', { screen: 'Mypage' })}>
           <Text style={styles.userName}>김국민</Text>
           <Text style={styles.honorific}>님</Text>
-        </View>
+        </TouchableOpacity >
 
         {/* 상담 옵션 카드 */}
         <TouchableOpacity style={styles.card}>
