@@ -9,9 +9,11 @@ function LogoHeader() {
   
   return (
     <View style={styles.headerContainer}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+      {navigation.canGoBack() && (
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Icon name="arrow-back" size={24} color="#000000" />
       </TouchableOpacity>
+      )}
       <Image source={require('../../assets/logo.png')} style={styles.logo} />
       <Text style={styles.headerText}>KB스타후르츠뱅킹</Text>
     </View>
