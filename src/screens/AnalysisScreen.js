@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import MonthPicker from 'react-native-month-year-picker';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 import AgePieChart from '../components/analysis/AgePieChart';
 import KeywordList from '../components/analysis/KeywordList';
 import KeywordCloud from '../components/analysis/KeywordCloud';
@@ -39,6 +40,9 @@ function parseDuration(isoDuration) {
 }
 
 function AnalysisScreen() {
+  const user = useSelector((state) => state.user.user);
+  const accessToken = user?.accessToken;
+
   // 현재 날짜를 기준으로 초기 값 설정
   const today = new Date();
   const initialEndYearMonth = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -62,7 +66,11 @@ function AnalysisScreen() {
 
   const fetchAgeData = useCallback(async () => {
     try {
-      const response = await axios.get('http://192.168.219.108:8080/api/v1/record/analysis/age');
+      const response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/age', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
       const data = response.data;
 
       const total = Object.values(data).reduce((sum, value) => sum + value, 0) || 1;
@@ -77,57 +85,73 @@ function AnalysisScreen() {
 
       setAgeData(formattedData);
     } catch (error) {
-      console.error("Error fetching age data:", error);
+      console.error("Error fetching age data:", error.message);
       setError(error);
     }
-  }, []);
+  }, [accessToken]);
 
   const fetchKeywordData = useCallback(async () => {
     try {
-      const response = await axios.get('http://192.168.219.108:8080/api/v1/record/analysis/keywords');
+      const response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/keywords', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
       setKeywordData(response.data);
     } catch (error) {
-      console.error("Error fetching keywords:", error);
+      console.error("Error fetching keyword data:", error.message);
       setError(error);
     }
-  }, []);
+  }, [accessToken]);
 
   const fetchTimeData = useCallback(async () => {
     try {
-      const response = await axios.get('http://192.168.219.108:8080/api/v1/record/analysis/time');
+      const response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/time', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
       const completeData = generateCompleteTimeData(response.data);
       setTimeData(completeData);
     } catch (error) {
-      console.error("Error fetching time data:", error);
+      console.error("Error fetching time data:", error.message);
       setError(error);
     }
-  }, []);
+  }, [accessToken]);
 
   const fetchDurationData = useCallback(async () => {
     try {
-      const response = await axios.get(`http://192.168.219.108:8080/api/v1/record/analysis/runtime/range/${startYearMonth}/${endYearMonth}`);
+      const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/runtime/range/${startYearMonth}/${endYearMonth}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
       const formattedData = Object.entries(response.data).map(([yearMonth, duration]) => ({
         yearMonth,
         duration: parseDuration(duration)
       }));
       setDurationData(formattedData);
     } catch (error) {
-      console.error("Error fetching duration data:", error);
+      console.error("Error fetching duration data:", error.message);
     }
-  }, [startYearMonth, endYearMonth]);
+  }, [startYearMonth, endYearMonth, accessToken]);
 
   const fetchCountData = useCallback(async () => {
     try {
-      const response = await axios.get(`http://192.168.219.108:8080/api/v1/record/analysis/count/range/${startYearMonthCount}/${endYearMonthCount}`);
+      const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/count/range/${startYearMonthCount}/${endYearMonthCount}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
       const formattedData = Object.entries(response.data).map(([yearMonth, count]) => ({
         yearMonth,
         count,
       }));
       setCountData(formattedData);
     } catch (error) {
-      console.error("Error fetching count data:", error);
+      console.error("Error fetching count data:", error.message);
     }
-  }, [startYearMonthCount, endYearMonthCount]);
+  }, [startYearMonthCount, endYearMonthCount, accessToken]);
 
   useEffect(() => {
     fetchAgeData();
@@ -158,7 +182,7 @@ function AnalysisScreen() {
   };
 
   if (error) {
-    return <Text style={styles.errorText}>{error}</Text>;
+    return <Text style={styles.errorText}>{JSON.stringify(error, null, 2)}</Text>;
   }
 
   return (
@@ -168,7 +192,7 @@ function AnalysisScreen() {
         <View style={styles.chartContainer}>
           <AgePieChart data={ageData} />
         </View>
-      )}
+      )} 
       <Text style={styles.title}>키워드 빈도</Text>
       {keywordData.length > 0 && (
         <View style={styles.chartContainer}>
@@ -226,7 +250,7 @@ function AnalysisScreen() {
         />
       )}
 
-<Text style={styles.title}>상담 건수</Text>
+      <Text style={styles.title}>상담 건수</Text>
       <View style={styles.dateContainer}>
         <TouchableOpacity style={styles.dateButton} onPress={() => setStartCountPickerVisible(true)}>
           <Text style={styles.buttonText}>시작 : {startYearMonthCount}</Text>
@@ -241,7 +265,6 @@ function AnalysisScreen() {
         </View>
       )}
 
-      {/* MonthPicker for countData */}
       {isStartCountPickerVisible && (
         <MonthPicker
           onChange={(event, date) => {
