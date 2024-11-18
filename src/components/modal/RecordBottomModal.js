@@ -17,6 +17,12 @@ const RecordBottomModal = ({ isVisible, onClose }) => {
   const startDate = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
   const endDate = today;
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleToggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   const fetchRecordsForCustomer = async () => {
     await axios.get(`http://10.0.2.2:8080/api/record/customer`, {
       params: {
@@ -106,27 +112,75 @@ const RecordBottomModal = ({ isVisible, onClose }) => {
 
           {selectedRecord && details ? (
             <ScrollView>
-            <View style={styles.detailContainer}>
-              <Text>상담 날짜: {selectedRecord.counselRoom?.createdAt?.split('T')[0]}</Text>
-              <Text>상담사: {details.counselor}</Text>
-              <Text>제목: {details.summary.summaryShort}</Text>
-              <Text>요약: {details.summary.summaryText}</Text>
-              <Text>키워드 목록</Text>
-              {details.keywords.map((keyword, index) => (
-                <View key={index}>
-                  <Text>{keyword}</Text>
+              <View>
+                <Text style={styles.detailTitle}>
+                  <Text>상담 날짜 : </Text>
+                  <Text style={styles.detailContent}>{selectedRecord.counselRoom?.createdAt?.split('T')[0]}</Text>
+                </Text>
+                <Text style={styles.detailTitle}>
+                  <Text>상담사 : </Text>
+                  <Text style={styles.detailContent}>{details.counselor}</Text>
+                </Text>
+                <Text style={styles.detailTitle}>
+                  <Text>제목 : </Text>
+                  <Text style={styles.detailContent}>{details.summary.summaryShort}</Text>
+                </Text>
+
+                <View style={styles.divider} />
+                
+                <View style={styles.detailContentContainer}>
+                  <Text style={styles.detailTitle}>요약</Text>
+                  <Text style={styles.detailSummary}>
+                    {details.summary.summaryText}
+                  </Text>
                 </View>
-              ))}
-              <Text>상담 내용: {details.fullText}</Text>
-              <Text>상담 피드백: {details.feedback}</Text>
-              <Text>상담 메모</Text>
-              {details.memos.map((memo, index) => (
-                <View key={index}>
-                  <Text>{memo.createdAt}</Text>
-                  <Text>{memo.memo}</Text>
+                
+                <View style={styles.detailContentContainer}>
+                  <Text style={styles.detailTitle}>키워드</Text>
+                  <View style={styles.keywordsWrapper}>
+                    {details.keywords.map((keyword, index) => (
+                      <View key={index} style={styles.keywordContainer}>
+                        <Text style={styles.keywordText}>#{keyword}</Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
-              ))}
-            </View>
+
+                <View style={styles.detailContentContainer}>
+                  <Text style={styles.detailTitle}>상담 내용</Text>
+                  <Text>
+                    {isExpanded
+                      ? details.fullText
+                      : details.fullText.substring(0, 100) + (details.fullText.length > 100 ? "..." : "")}
+                  </Text>
+                  {details.fullText.length > 100 && (
+                    <TouchableOpacity onPress={handleToggleExpand} style={styles.expandButton}>
+                      <Text style={styles.expandButtonText}>
+                        {isExpanded ? "접기" : "더보기"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+       
+                {details.feedback && (
+                  <View style={styles.detailContentContainer}>
+                    <Text style={styles.detailTitle}>상담 피드백</Text>
+                    <Text>{details.feedback}</Text>
+                  </View>
+                )}
+
+                {details.memos && (
+                  <>
+                  <View style={styles.divider} />
+                  {details.memos.map((memo, index) => (
+                    <View key={index} style={styles.memoContainer}>
+                      <Text style={styles.memoDate}>{memo.createdAt.split('T')[0]}</Text>
+                      <Text style={styles.memoContent}>{memo.memo}</Text>
+                    </View>
+                  ))}
+                  </>
+                )}
+              </View>
             </ScrollView>
           ) : (
             <FlatList
@@ -200,6 +254,11 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
+  divider: {
+    height: 1,
+    backgroundColor: '#DCD9D9',
+    marginVertical: 10,
+  },
   recordItem: {
     padding: 16,
     backgroundColor: '#FFE580',
@@ -218,20 +277,68 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  // detailContainer: {
-  //   padding: 16,
-  // },
   detailTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  detailDate: {
     fontSize: 16,
+    fontWeight: 'semibold',
     marginBottom: 8,
+  },
+  detailContent: {
+    fontSize: 16,
+    fontWeight: 'regular',
+  },
+  detailContentContainer: {
+    borderWidth: 1,
+    borderRadius: 10,
+    borderColor: '#7E7E7E',
+    padding: 16,
+    marginVertical: 8,
   },
   detailSummary: {
     fontSize: 14,
+    fontWeight: 'regular',
+  },
+  keywordsWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  keywordContainer: {
+    backgroundColor: '#FFE580',
+    borderRadius: 100,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  keywordText: {
+    fontSize: 14,
+  },
+  memoContainer: {
+    borderRadius: 13,
+    backgroundColor: '#FFE580',
+    padding: 16,
+    marginVertical: 8,
+  },
+  memoDate: {
+    fontWeight: 'semibold',
+    fontSize: 12,
+  },
+  memoContent: {
+    fontSize: 14,
+  },
+  expandButton: {
+    marginTop: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#464646',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  expandButtonText: {
+    color: '#464646',
+    fontWeight: 'medium',
+    fontSize: 12,
   },
 });
 
