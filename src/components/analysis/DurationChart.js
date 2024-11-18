@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions, View, Text, StyleSheet } from 'react-native';
 
@@ -18,6 +18,13 @@ const DurationChart = ({ data }) => {
   const chartData = sortedData.map(item => item.duration);
   const [selectedData, setSelectedData] = useState(null);
 
+  useEffect(() => {
+    if (selectedData) {
+      const timeout = setTimeout(() => setSelectedData(null), 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [selectedData]);
+
   return (
     <View style={styles.container}>
       {selectedData && (
@@ -28,7 +35,7 @@ const DurationChart = ({ data }) => {
           ]}
         >
           <Text style={styles.tooltipText}>
-              {selectedData.label}: {selectedData.value}분
+              {selectedData.label}: {selectedData.value.toFixed(1)}분
           </Text>
         </View>
       )}
