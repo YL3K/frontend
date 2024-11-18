@@ -76,11 +76,11 @@ function AnalysisScreen() {
       const total = Object.values(data).reduce((sum, value) => sum + value, 0) || 1;
 
       const formattedData = [
-        { name: `% - 20세 이하`, population: (data['20세 이하'] || 0) / total * 100, color: '#FF6384', legendFontColor: '#7F7F7F', legendFontSize: 12 },
-        { name: `% - 20대`, population: (data['20대'] || 0) / total * 100, color: '#36A2EB', legendFontColor: '#7F7F7F', legendFontSize: 12 },
-        { name: `% - 30대`, population: (data['30대'] || 0) / total * 100, color: '#FFCE56', legendFontColor: '#7F7F7F', legendFontSize: 12 },
-        { name: `% - 40대`, population: (data['40대'] || 0) / total * 100, color: '#4BC0C0', legendFontColor: '#7F7F7F', legendFontSize: 12 },
-        { name: `% - 50세 이상`, population: (data['50세 이상'] || 0) / total * 100, color: '#9966FF', legendFontColor: '#7F7F7F', legendFontSize: 12 },
+        { name: `% - 20세 이하`, population: parseFloat(((data['20세 이하'] || 0) / total * 100).toFixed(1)), color: '#FF6384', legendFontColor: '#7F7F7F', legendFontSize: 12 },
+        { name: `% - 20대`, population: parseFloat(((data['20대'] || 0) / total * 100).toFixed(1)), color: '#36A2EB', legendFontColor: '#7F7F7F', legendFontSize: 12 },
+        { name: `% - 30대`, population: parseFloat(((data['30대'] || 0) / total * 100).toFixed(1)), color: '#FFCE56', legendFontColor: '#7F7F7F', legendFontSize: 12 },
+        { name: `% - 40대`, population: parseFloat(((data['40대'] || 0) / total * 100).toFixed(1)), color: '#4BC0C0', legendFontColor: '#7F7F7F', legendFontSize: 12 },
+        { name: `% - 50세 이상`, population: parseFloat(((data['50세 이상'] || 0) / total * 100).toFixed(1)), color: '#9966FF', legendFontColor: '#7F7F7F', legendFontSize: 12 },
       ];
 
       setAgeData(formattedData);
