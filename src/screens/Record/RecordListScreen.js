@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Alert, View, Text, FlatList, ActivityIndicator, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
+
 
 function RecordListScreen({ navigation }) {
   const today = new Date(); // 오늘 날짜
@@ -10,7 +12,6 @@ function RecordListScreen({ navigation }) {
   const [records, setRecords] = useState([]);
   const [topKeyword, setTopKeyword] = useState("");
   const [totalCounselCount, setTotalCounselCount] = useState(0);
-  const [userType, setUserType] = useState("");
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState(firstDayOfMonth); // 이번 달 1일
   const [endDate, setEndDate] = useState(today); // 오늘 날짜
@@ -18,31 +19,43 @@ function RecordListScreen({ navigation }) {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [customerName, setCustomerName] = useState(""); // 고객명 필터 상태
   const [searchText, setSearchText] = useState(""); // 검색 입력 상태
-  const userId = 3; // 예제용 고정 userId 값
+
+  const user = useSelector((state) => state.user.user);
+  const accessToken = user?.accessToken;
+  const userId = user?.userId;
+  const userType = user?.userType;
 
   const fetchRecords = () => {
+  
     setLoading(true);
+  
+    const endpoint = userType === "customer" ? "/customer" : "/counselor"; // 호출할 엔드포인트 결정
+  
     axios
-      .get(`http://10.0.2.2:8080/api/record/`, {
+      .get(`http://10.0.2.2:8080/api/record${endpoint}`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`, // Redux에 저장된 토큰 사용
+        },
         params: {
-          userId,
-          startDate: `${startDate.toISOString().split('T')[0]}T00:00:00`,
-          endDate: `${endDate.toISOString().split('T')[0]}T23:59:59`,
-          customerName: customerName || undefined, // customerName이 있을 때만 포함
+          userId: user?.userId, // Redux에서 userId 가져오기
+          startDate: `${startDate.toISOString().split("T")[0]}T00:00:00`,
+          endDate: `${endDate.toISOString().split("T")[0]}T23:59:59`,
+          ...(userType === "counselor" && customerName && { customerName }), // counselor일 때만 customerName 포함
         },
       })
-      .then(response => {
-        setUserType(response.data.userType);
-        if (response.data.userType === "customer") {
-          setRecords(response.data.summaries);
-          setTopKeyword(response.data.topKeyword);
-        } else if (response.data.userType === "counselor") {
-          setRecords(response.data.summaries);
-          setTotalCounselCount(response.data.totalCounselCount);
+      .then((response) => {
+        console.log("userId : "+userId);
+        console.log("userType : " +userType);
+        if (userType === "customer") {
+          setRecords(response.data.response.data.summaries);
+          setTopKeyword(response.data.response.data.topKeyword);
+        } else if (userType === "counselor") {
+          setRecords(response.data.response.data.summaries);
+          setTotalCounselCount(response.data.response.data.totalCounselCount);
         }
         setLoading(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching records:", error);
         setLoading(false);
       });
@@ -62,28 +75,28 @@ function RecordListScreen({ navigation }) {
           text: "확인",
           onPress: async () => {
             try {
-              setLoading(true); // 로딩 상태 시작
+              setLoading(true);
               const response = await axios.delete(
                 `http://10.0.2.2:8080/api/record/${summaryId}`,
-                { headers: { "Content-Type": "application/json" } }
+                { headers: { Authorization: `Bearer ${accessToken}` } }
               );
 
               if (response.status === 200) {
                 console.log(`요약 ID ${summaryId}가 성공적으로 삭제되었습니다.`);
-                await fetchRecords(); // 데이터 다시 로드
+                await fetchRecords();
               }
             } catch (error) {
               console.error("메모 삭제 중 오류 발생:", error);
             } finally {
-              setLoading(false); // 로딩 상태 종료
+              setLoading(false);
             }
           },
         },
       ],
-      { cancelable: true } // Alert 창 외부 탭으로 닫기 가능
+      { cancelable: true }
     );
   };
-
+  
   useEffect(() => {
     fetchRecords();
   }, [startDate, endDate, customerName]); // 날짜 또는 고객명 변경 시에 fetchRecords 실행
@@ -173,7 +186,14 @@ function RecordListScreen({ navigation }) {
         {userType === "customer" ? (
           <View style={styles.statsBox}>
             <Text style={styles.statsLabel}>최다 키워드</Text>
-            <Text style={styles.keywordValue}>#{topKeyword}</Text>
+            <Text
+              style={[
+                styles.keywordValue,
+                !topKeyword && styles.keywordValueSmall, 
+              ]}
+            >
+              {topKeyword ? `#${topKeyword}` : "조회된 키워드가 없습니다"}
+            </Text>
           </View>
         ) : (
           <View style={styles.statsBox}>
@@ -194,7 +214,7 @@ function RecordListScreen({ navigation }) {
           >
             {userType === "counselor" && (
               <Text style={styles.recordDate}>
-                {item.counselRoom.createdAt.split("T")[0]} / {item.user ? item.user.userName : "고객 이름 없음"}
+                {item.counselRoom.createdAt.split("T")[0]} / {item.customerName ? item.customerName : "고객 이름 없음"}
               </Text>
             )}
             {userType === "customer" && (
@@ -319,6 +339,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     textAlign: "center",
+  },
+  keywordValueSmall: {
+    paddingVertical : 6,
+    fontSize: 13, // 작은 폰트 크기
+    fontWeight: "normal",
+    color: "blue", // 기존 색상 유지
   },
 });
 
