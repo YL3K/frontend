@@ -8,12 +8,17 @@ import SettingsScreen from '../screens/SettingsScreen';
 import CounterScreen from '../screens/CounterScreen';
 import AnalysisScreen from '../screens/AnalysisScreen';
 import LogoHeader from '../components/header/LogoHeader';
+import { useSelector, useDispatch } from 'react-redux';
 
 const Stack = createStackNavigator();
 
 function MainStackNavigator() {
+  const user = useSelector((state) => state.user.user); // Redux에서 사용자 정보 가져오기
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
+
   return (
     <Stack.Navigator
+      initialRouteName={isLoggedIn ? "Main" : "Member"}
       screenOptions={{
         header: () => <LogoHeader />,  // 기본 상단 헤더를 LogoHeader로 설정
       }}

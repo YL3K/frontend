@@ -9,9 +9,9 @@ const Stack = createStackNavigator();
 function CounselNavigator() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="CounselorWaiting" component={CounselorWaitingScreen} />
-      <Stack.Screen name="VideoConsult" component={VideoConsultScreen} />
-      <Stack.Screen name="EndSession" component={EndSessionScreen} />
+      <Stack.Screen name="CounselorWaiting" component={CounselorWaitingScreen} options={{headerShown: false}} />
+      <Stack.Screen name="VideoConsult" component={VideoConsultScreen} options={{headerShown: false}} />
+      <Stack.Screen name="EndSession" component={EndSessionScreen} options={{headerShown: false}} />
     </Stack.Navigator>
   );
 }

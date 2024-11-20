@@ -1,15 +1,21 @@
 import React from 'react';
 import { View, Image, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 
 function LogoHeader() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const title = route.name;
+
+  // 특정 화면에서만 뒤로가기 버튼 숨기기
+  const hideBackButtonScreens = ['Home', 'Login', 'Counsel'];
+  const showBackButton = !hideBackButtonScreens.includes(title) && navigation.canGoBack();
   
   return (
     <View style={styles.headerContainer}>
-      {navigation.canGoBack() && (
+      {showBackButton && (
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Icon name="arrow-back" size={24} color="#000000" />
       </TouchableOpacity>
