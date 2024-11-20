@@ -4,7 +4,6 @@ import LoginScreen from '../../screens/member/LoginScreen';
 import SignUpScreen from '../../screens/member/SignUpScreen';
 import ConfirmScreen from '../../screens/member/ConfirmScreen';
 import MyPageScreen from '../../screens/member/MyPageScreen';
-import WaitingQueueScreen from '../../screens/member/WaitingQueueScreen';
 
 const Stack = createStackNavigator();
 
@@ -15,7 +14,6 @@ function MemberNavigator() {
       <Stack.Screen name="SignUp" component={SignUpScreen} options={{headerShown: false}} />
       <Stack.Screen name="Confirm" component={ConfirmScreen} options={{headerShown: false}} />
       <Stack.Screen name="Mypage" component={MyPageScreen} options={{headerShown: false}} />
-      <Stack.Screen name="WaitingQueue" component={WaitingQueueScreen} options={{headerShown: false}} />
     </Stack.Navigator>
   );
 }

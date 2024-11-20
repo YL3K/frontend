@@ -45,7 +45,7 @@ function MyPageScreen({ navigation }) {
           <Text style={styles.menuText}>상담 내역</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('WaitingQueue')}>
+        <TouchableOpacity style={styles.menuItem}>
           <Icon name="support-agent" size={24} color="#000" />
           <Text style={styles.menuText}>고객센터</Text>
         </TouchableOpacity>
