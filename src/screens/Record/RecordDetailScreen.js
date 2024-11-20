@@ -3,9 +3,14 @@ import { Alert, View, Text, ScrollView, ActivityIndicator, StyleSheet, Touchable
 import { Linking } from "react-native";
 import axios from "axios";
 import { useSelector } from 'react-redux';
+import ReusableTwoBtnModal from "../../components/modal/ReusableTwoBtnModal";
 
 function RecordDetailScreen({ route,navigation }) {
-  const { summaryId } = route.params || {}; // route.params가 undefined일 경우를 대비
+  const { summaryId } = route.params || {}; 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isMemoModalVisible, setIsMemoModalVisible] = useState(false);
+  const [selectedMemoId, setSelectedMemoId] = useState(null);
+
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [feedbackInput, setFeedbackInput] = useState("");
@@ -50,7 +55,6 @@ function RecordDetailScreen({ route,navigation }) {
       return;
     }
     try {
-      setLoading(true);
       const response = await axios.post(
         `http://10.0.2.2:8080/api/record/feedback`,
         {
@@ -130,43 +134,38 @@ function RecordDetailScreen({ route,navigation }) {
   };
   
 
-  const handleDeleteMemo = async (memoId) => {
-    try {
-      Alert.alert(
-        "메모 삭제",
-        "정말로 삭제하시겠습니까?",
-        [
-          { text: "취소", style: "cancel" },
-          {
-            text: "확인",
-            onPress: async () => {
-              const response = await axios.delete(
-                `http://10.0.2.2:8080/api/record/memo/${memoId}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                  },
-                }
-              );
+  const handleDeleteMemo = (memoId) => {
+    setSelectedMemoId(memoId); // 삭제할 메모 ID 설정
+    setIsMemoModalVisible(true); // 모달 표시
+  };
 
-              if (response.status === 200) {
-                setDetails((prevDetails) => ({
-                  ...prevDetails,
-                  memos: prevDetails.memos.filter(
-                    (memo) => memo.memoId !== memoId
-                  ),
-                }));
-              }
-            },
+
+  const confirmDeleteMemo = async () => {
+    if (!selectedMemoId) return; // 삭제할 메모 ID가 없으면 종료
+    try {
+      const response = await axios.delete(
+        `http://10.0.2.2:8080/api/record/memo/${selectedMemoId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
           },
-        ],
-        { cancelable: true }
+        }
       );
+  
+      if (response.status === 200) {
+        setDetails((prevDetails) => ({
+          ...prevDetails,
+          memos: prevDetails.memos.filter(
+            (memo) => memo.memoId !== selectedMemoId
+          ),
+        }));
+        setIsMemoModalVisible(false); // 모달 숨기기
+        setSelectedMemoId(null); // 선택된 메모 ID 초기화
+      }
     } catch (error) {
       console.error("메모 삭제 중 오류 발생:", error);
     }
   };
-
 
   const handleModifyMemo = (memoId) => {
     setDetails((prevDetails) => ({
@@ -225,39 +224,27 @@ function RecordDetailScreen({ route,navigation }) {
 };
 
 
-  const handleDeleteSummary = (summaryId) => {
-    Alert.alert(
-        "요약 삭제",
-        "정말로 삭제하시겠습니까?",
-        [
-            {
-                text: "취소",
-                style: "cancel",
-            },
-            {
-                text: "확인",
-                onPress: async () => {
-                    try {
-                        setLoading(true);
-                        const response = await axios.delete(
-                            `http://10.0.2.2:8080/api/record/${summaryId}`,
-                            { headers: { Authorization: `Bearer ${accessToken}` } }
-                        );
+const handleDeleteSummary = () => {
+  setIsModalVisible(true); // 모달 표시
+};
 
-                        if (response.status === 200) {
-                            console.log(`요약 ID ${summaryId}가 성공적으로 삭제되었습니다.`);
-                            navigation.goBack(); 
-                        }
-                    } catch (error) {
-                        console.error("요약 삭제 중 오류 발생:", error);
-                    } finally {
-                        setLoading(false);
-                    }
-                },
-            },
-        ]
+const confirmDeleteSummary = async () => {
+  try {
+    const response = await axios.delete(
+      `http://10.0.2.2:8080/api/record/${summaryId}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     );
-  };
+
+    if (response.status === 200) {
+      console.log(`요약 ID ${summaryId}가 성공적으로 삭제되었습니다.`);
+      navigation.goBack();
+    }
+  } catch (error) {
+    console.error("요약 삭제 중 오류 발생:", error);
+  } finally {
+    setIsModalVisible(false); // 모달 숨기기
+  }
+};
 
 
 
@@ -401,13 +388,15 @@ function RecordDetailScreen({ route,navigation }) {
         <View>
           {/* "메모" 제목 항상 표시 */}
           <Text style={styles.label}>메모</Text>
+
           {/* 메모 목록 */}
           {details.memos && details.memos.length > 0 ? (
-            details.memos.map((memo,index) => (
+            details.memos.map((memo, index) => (
               <View key={memo.memoId} style={styles.memoContainer}>
                 <Text style={styles.memoDate}>{memo.createdAt.split("T")[0]}</Text>
                 {memo.isEditing ? (
                   <View>
+                    {/* 수정 모드: TextInput 표시 */}
                     <TextInput
                       style={styles.textInput}
                       value={memo.editingContent || memo.memo}
@@ -423,12 +412,14 @@ function RecordDetailScreen({ route,navigation }) {
                       }
                     />
                     <View style={styles.buttonContainer}>
+                      {/* 저장 버튼 */}
                       <TouchableOpacity
                         style={styles.modifyButton}
                         onPress={() => handleSaveMemo(memo.memoId, memo.editingContent)}
                       >
                         <Text style={styles.modifyButtonText}>저장</Text>
                       </TouchableOpacity>
+                      {/* 취소 버튼 */}
                       <TouchableOpacity
                         style={styles.deleteButton}
                         onPress={() => handleCancelEdit(memo.memoId)}
@@ -439,14 +430,17 @@ function RecordDetailScreen({ route,navigation }) {
                   </View>
                 ) : (
                   <View>
+                    {/* 일반 모드: 메모 텍스트와 수정/삭제 버튼 표시 */}
                     <Text style={styles.memoText}>{memo.memo}</Text>
                     <View style={styles.buttonContainer}>
+                      {/* 수정 버튼 */}
                       <TouchableOpacity
                         style={styles.modifyButton}
                         onPress={() => handleModifyMemo(memo.memoId)}
                       >
                         <Text style={styles.modifyButtonText}>수정</Text>
                       </TouchableOpacity>
+                      {/* 삭제 버튼 */}
                       <TouchableOpacity
                         style={styles.deleteButton}
                         onPress={() => handleDeleteMemo(memo.memoId)}
@@ -462,8 +456,22 @@ function RecordDetailScreen({ route,navigation }) {
             <Text style={styles.value}>등록된 메모가 없습니다.</Text>
           )}
 
+          {/* 삭제 확인 모달 */}
+          <ReusableTwoBtnModal
+            isVisible={isMemoModalVisible}
+            title="메모 삭제"
+            content="정말로 삭제하시겠습니까?"
+            onBtnText1="취소"
+            onBtnAction1={() => {
+              setIsMemoModalVisible(false); // 모달 숨기기
+              setSelectedMemoId(null); // 선택된 메모 ID 초기화
+            }}
+            onBtnText2="확인"
+            onBtnAction2={confirmDeleteMemo} // 삭제 확인
+          />
         </View>
       )}
+
 
       {userType === "customer" && (
         <View style={styles.memoInputBox}>
@@ -486,16 +494,26 @@ function RecordDetailScreen({ route,navigation }) {
         </View>
       )}
 
-          <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDeleteSummary(summaryId)}
-            >
-              <Text style={styles.deleteButtonText}>삭제</Text>
-            </TouchableOpacity>
 
+      {/* 삭제 버튼 */}
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={handleDeleteSummary}
+      >
+        <Text style={styles.deleteButtonText}>삭제</Text>
+      </TouchableOpacity>
 
-
-
+      {/* 삭제 확인 모달 */}
+      <ReusableTwoBtnModal
+        isVisible={isModalVisible}
+        title="요약 삭제"
+        content="정말로 삭제하시겠습니까?"
+        onBtnText1="취소"
+        onBtnAction1={() => setIsModalVisible(false)} // 모달 닫기
+        onBtnText2="확인"
+        onBtnAction2={confirmDeleteSummary} // 삭제 확인
+      />
+  
 
 
 
