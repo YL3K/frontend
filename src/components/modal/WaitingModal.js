@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 
-const WaitingModal = ({ visible, onCancel, onClose }) => {
+const WaitingModal = ({ isVisible, onCancel, onClose }) => {
   const [waitingCount, setWaitingCount] = useState(0);
 
   // waitingCount 대기열 api에서 조회해서 띄우기 + 주기적으로 
@@ -13,7 +13,7 @@ const WaitingModal = ({ visible, onCancel, onClose }) => {
     <Modal
       animationType="slide"
       transparent={true}
-      visible={visible}
+      isVisible={isVisible}
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
