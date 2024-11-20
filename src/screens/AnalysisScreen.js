@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import MonthPicker from 'react-native-month-year-picker';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
@@ -62,9 +62,18 @@ function AnalysisScreen() {
   const [timeData, setTimeData] = useState({});
   const [durationData, setDurationData] = useState([]);
   const [countData, setCountData] = useState([]);
+
+  const [isAgeLoading, setIsAgeLoading] = useState(true);
+  const [isKeywordLoading, setIsKeywordLoading] = useState(true);
+  const [isTimeLoading, setIsTimeLoading] = useState(true);
+  const [isDurationLoading, setIsDurationLoading] = useState(true);
+  const [isCountLoading, setIsCountLoading] = useState(true);
+
+
   const [error, setError] = useState(null);
 
   const fetchAgeData = useCallback(async () => {
+    setIsAgeLoading(true);
     try {
       const response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/age', {
         headers: {
@@ -87,10 +96,13 @@ function AnalysisScreen() {
     } catch (error) {
       console.error("Error fetching age data:", error.message);
       setError(error);
+    } finally {
+      setIsAgeLoading(false);
     }
   }, [accessToken]);
 
   const fetchKeywordData = useCallback(async () => {
+    setIsKeywordLoading(true);
     try {
       const response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/keywords', {
         headers: {
@@ -101,10 +113,13 @@ function AnalysisScreen() {
     } catch (error) {
       console.error("Error fetching keyword data:", error.message);
       setError(error);
+    } finally {
+      setIsKeywordLoading(false);
     }
   }, [accessToken]);
 
   const fetchTimeData = useCallback(async () => {
+    setIsTimeLoading(true);
     try {
       const response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/time', {
         headers: {
@@ -116,10 +131,13 @@ function AnalysisScreen() {
     } catch (error) {
       console.error("Error fetching time data:", error.message);
       setError(error);
+    } finally {
+      setIsTimeLoading(false);
     }
   }, [accessToken]);
 
   const fetchDurationData = useCallback(async () => {
+    setIsDurationLoading(true);
     try {
       const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/runtime/range/${startYearMonth}/${endYearMonth}`, {
         headers: {
@@ -133,10 +151,13 @@ function AnalysisScreen() {
       setDurationData(formattedData);
     } catch (error) {
       console.error("Error fetching duration data:", error.message);
+    } finally {
+      setIsDurationLoading(false);
     }
   }, [startYearMonth, endYearMonth, accessToken]);
 
   const fetchCountData = useCallback(async () => {
+    setIsCountLoading(true);
     try {
       const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/count/range/${startYearMonthCount}/${endYearMonthCount}`, {
         headers: {
@@ -150,6 +171,8 @@ function AnalysisScreen() {
       setCountData(formattedData);
     } catch (error) {
       console.error("Error fetching count data:", error.message);
+    } finally {
+      setIsCountLoading(false);
     }
   }, [startYearMonthCount, endYearMonthCount, accessToken]);
 
@@ -183,6 +206,18 @@ function AnalysisScreen() {
 
   if (error) {
     return <Text style={styles.errorText}>{JSON.stringify(error, null, 2)}</Text>;
+  }
+
+  const isLoading =
+    isAgeLoading || isKeywordLoading || isTimeLoading || isDurationLoading || isCountLoading;
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#007bff" />
+        <Text>데이터를 불러오는 중입니다...</Text>
+      </View>
+    );
   }
 
   return (
@@ -302,6 +337,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginVertical: 15,
+  },
+  loaderContainer: {
+    backgroundColor: '#fff',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
   },
   chartContainer: {
     borderWidth: 1,
