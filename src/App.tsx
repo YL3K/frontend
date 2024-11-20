@@ -5,14 +5,44 @@ import { createStackNavigator } from '@react-navigation/stack';
 import MainStackNavigator from './navigation/MainStackNavigator.js';
 import { Provider } from 'react-redux';
 import store from './store/store.js';
+import messaging from '@react-native-firebase/messaging';
+import ReusableModal from './components/modal/ReusableModal.js';
 
 const Stack = createStackNavigator();
 
 function App() {
+  const [isModalVisible, setIsModalVisible] = React.useState(false);
+  const [notificationData, setNotificationData] = React.useState({
+    title: '',
+    content: '',
+  });
+
+  React.useEffect(() => {
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      console.log("Foreground notification received");
+      if (remoteMessage.notification?.title && remoteMessage.notification?.body) {
+        setNotificationData({ title: remoteMessage.notification.title, content: remoteMessage.notification.body });
+        setIsModalVisible(true);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const onCloseModal = () => {
+    setIsModalVisible(false);
+  };
+
   return (
     <Provider store={store}>
       <NavigationContainer>
         <MainStackNavigator />
+        <ReusableModal
+          isVisible={isModalVisible}
+          onClose={onCloseModal}
+          title={notificationData.title}
+          content={notificationData.content}
+        />
       </NavigationContainer>
     </Provider>
   );
