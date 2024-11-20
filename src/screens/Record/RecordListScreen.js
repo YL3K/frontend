@@ -208,10 +208,13 @@ function RecordListScreen({ navigation }) {
         data={records}
         keyExtractor={item => item.summaryId.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.recordItem}
-            onPress={() => navigation.navigate('RecordDetail', { summaryId: item.summaryId })}
+          <TouchableOpacity style={styles.recordItem}
+            onPress={() => 
+              navigation.navigate('RecordDetail', { summaryId: item.summaryId,
+              })
+            }
           >
+
             {userType === "counselor" && (
               <Text style={styles.recordDate}>
                 {item.counselRoom.createdAt.split("T")[0]} / {item.customerName ? item.customerName : "고객 이름 없음"}

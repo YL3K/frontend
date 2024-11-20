@@ -6,7 +6,6 @@ import HomeScreen from '../screens/HomeScreen';
 import AnalysisScreen from '../screens/AnalysisScreen';
 import LogoHeader from '../components/header/LogoHeader';
 import HomeHeader from '../components/header/HomeHeader';
-import RecordNavigator from '../navigation/Stack/RecordNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -38,11 +37,16 @@ function MainTabNavigator() {
       />
       <Tab.Screen
         name="금융상품"
-        component={RecordNavigator}
+        component={HomeScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Icon name="work" color='#495057' size={size} />
           ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+          },
         }}
       />
       <Tab.Screen

@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import { View, Text, Button, Image, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+import { screensEnabled } from 'react-native-screens';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 function HomeScreen({ navigation }) {
@@ -16,7 +17,8 @@ function HomeScreen({ navigation }) {
         </TouchableOpacity >
 
         {/* 상담 옵션 카드 */}
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity style={styles.card}  
+          onPress={() => navigation.navigate('Record',{screen:'RecordListScreen' })}>
           <View>
             <Text style={styles.cardTitle}>화상 상담과 상담 요약까지</Text>
             <Text style={styles.cardDescription}>상담 요약 레포트 제공! 이전 상담까지 모아보기</Text>
