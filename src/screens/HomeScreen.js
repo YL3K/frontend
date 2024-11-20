@@ -66,26 +66,19 @@ function HomeScreen({ navigation }) {
           <Text style={styles.sectionSubTitle}>{user?.userName}님의 상담 키워드를 기반으로</Text>
           <Text style={styles.sectionTitle}>맞춤 서비스를 추천해드려요</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity style={styles.recommendCard}>
-              <Text style={styles.badge}>추천</Text>
-              <Text style={styles.recommendTitle}>전체계좌조회</Text>
-              <Text style={styles.recommendDescription}>전체계좌를 조회할 수 있어요</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.recommendCard}>
-              <Text style={styles.badge}>추천</Text>
-              <Text style={styles.recommendTitle}>이체</Text>
-              <Text style={styles.recommendDescription}>간편한 송금과 이체를 관리해요</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.recommendCard}>
-              <Text style={styles.badge}>추천</Text>
-              <Text style={styles.recommendTitle}>공과금 납부</Text>
-              <Text style={styles.recommendDescription}>공과금 납부도 스마트하게 관리할 수 있어요</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.recommendCard}>
-              <Text style={styles.badge}>추천</Text>
-              <Text style={styles.recommendTitle}>퇴직연금</Text>
-              <Text style={styles.recommendDescription}>퇴직연금을 관리하고 입금/이체/ETF를 한번에 관리해요</Text>
-            </TouchableOpacity>
+            {isLoading ? (
+              <Text style={{ color: "#9E9E9E", fontSize: 14 }}>키워드를 불러오는 중입니다...</Text>
+            ) : recommendations.length > 0 ? (
+              recommendations.map((item, index) => (
+                <TouchableOpacity key={index} onPress={() => Linking.openURL(item.url)} style={styles.recommendCard}>
+                  <Text style={styles.badge}>추천</Text>
+                  <Text style={styles.recommendTitle}>{item.keyword}</Text>
+                  <Text style={styles.recommendDescription}>{item.description}</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={{ color: "#9E9E9E", fontSize: 14 }}>추천 서비스가 없습니다.</Text>
+            )}
           </ScrollView>
         </View>
 
@@ -241,7 +234,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginRight: 10,
     width: 120,
-    height: 130,
     alignItems: 'flex-start',
   },
   badge: {
@@ -257,7 +249,7 @@ const styles = StyleSheet.create({
   },
   recommendTitle: {
     fontWeight: 'bold',
-    fontSize: 15,
+    fontSize: 16,
     marginBottom: 5,
     marginHorizontal: 5,
   },
