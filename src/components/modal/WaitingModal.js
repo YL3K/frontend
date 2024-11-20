@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 
-const WaitingModal = ({ isVisible, onCancel, onClose }) => {
-  const [waitingCount, setWaitingCount] = useState(0);
-
-  // waitingCount 대기열 api에서 조회해서 띄우기 + 주기적으로 
-  useEffect(()=>{
-
-  })
-
+const WaitingModal = ({ isVisible, onCancel, onClose, waitingQueue, user }) => {
   return (
     <Modal
       animationType="slide"
@@ -19,13 +12,21 @@ const WaitingModal = ({ isVisible, onCancel, onClose }) => {
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View>
-            <Text style={[styles.text, {marginBottom:5}]}>상담사와 연결 중입니다.</Text>
-            <Text style={styles.text}>잠시만 기다려주세요.</Text>
+            <Text style={[styles.waitingTitleText, {marginBottom:5}]}>상담사와 연결 중입니다 😀</Text>
+            <Text style={styles.text}>잠시만 기다려주세요 🙏</Text>
           </View>
 
           <View>
-            <Text style={styles.text}>현재 대기 인원</Text>
-            <Text style={styles.waitingCount}>{waitingCount}명</Text>
+            <Text style={styles.waitingTitleText}>현재 대기 인원</Text>
+            <View style={styles.waitingText}>
+              <Text style={styles.waitingCount}>{waitingQueue.length}</Text>
+              <Text style={styles.text}> 명 중 </Text>
+              <Text style={styles.waitingCount}>{waitingQueue.findIndex(item => item.userId === user.userId) + 1}</Text>
+              <Text style={styles.text}> 번째</Text>
+            </View>
+            <View style={styles.loadingWrapper}>
+              <ActivityIndicator size={220} color="#FFCC00" />
+            </View>
           </View>
 
           <View style={styles.buttonContainer}>
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '80%',
-    height: 280,
+    height: 400,
     backgroundColor: 'white',
     justifyContent: 'space-between', 
     flexDirection: 'column',
@@ -73,12 +74,33 @@ const styles = StyleSheet.create({
   spinnerContainer: {
     marginBottom: 20,
   },
+  loadingWrapper: {
+    position: 'absolute',
+    top: -25,
+    left: -2.5,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  waitingTitleText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 5
+  },
+  waitingText: {
+    flexDirection: 'row', // 가로 배치
+    justifyContent: 'center', // 가운데 정렬
+    alignItems: 'center', // 세로 정렬
+    marginBottom: 20, // 하단 여백 추가
+  },
   waitingCount: {
-    fontSize: 20,
+    fontSize: 23,
     textAlign: 'center',
     fontWeight: 'bold',
     color: '#FFD400',
-    marginBottom: 20,
+    // marginBottom: 20,
   },
   buttonContainer: {
     flexDirection: 'row',

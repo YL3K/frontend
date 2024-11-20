@@ -38,6 +38,7 @@ local.properties
 node_modules/
 npm-debug.log
 yarn-error.log
+package-lock.json
 
 # fastlane
 #
@@ -106,3 +107,5 @@ Package.resolved
 # CococaPods 관련 파일 무시
 ios/Pods/
 ios/Podfile.lock
+
+package-lock.json
