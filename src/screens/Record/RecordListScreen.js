@@ -122,6 +122,7 @@ function RecordListScreen({ navigation }) {
           mode="date"
           display="default"
           onChange={onStartDateChange}
+          maximumDate={today}
         />
       )}
       {showEndPicker && (
@@ -130,6 +131,7 @@ function RecordListScreen({ navigation }) {
           mode="date"
           display="default"
           onChange={onEndDateChange}
+          maximumDate={today}
         />
       )}
 
