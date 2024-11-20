@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useCallback } from 'react';
 import { Alert, View, Text, FlatList, ActivityIndicator, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import { useFocusEffect } from "@react-navigation/native";
 
 
 function RecordListScreen({ navigation }) {
@@ -37,7 +38,6 @@ function RecordListScreen({ navigation }) {
           Authorization: `Bearer ${user?.accessToken}`, // Redux에 저장된 토큰 사용
         },
         params: {
-          userId: user?.userId, // Redux에서 userId 가져오기
           startDate: `${startDate.toISOString().split("T")[0]}T00:00:00`,
           endDate: `${endDate.toISOString().split("T")[0]}T23:59:59`,
           ...(userType === "counselor" && customerName && { customerName }), // counselor일 때만 customerName 포함
@@ -61,45 +61,18 @@ function RecordListScreen({ navigation }) {
       });
   };
 
-  const handleDeleteSummary = (summaryId) => {
-    Alert.alert(
-      "요약 삭제",
-      "정말로 삭제하시겠습니까?",
-      [
-        {
-          text: "취소",
-          onPress: () => console.log("삭제 취소됨"),
-          style: "cancel",
-        },
-        {
-          text: "확인",
-          onPress: async () => {
-            try {
-              setLoading(true);
-              const response = await axios.delete(
-                `http://10.0.2.2:8080/api/record/${summaryId}`,
-                { headers: { Authorization: `Bearer ${accessToken}` } }
-              );
 
-              if (response.status === 200) {
-                console.log(`요약 ID ${summaryId}가 성공적으로 삭제되었습니다.`);
-                await fetchRecords();
-              }
-            } catch (error) {
-              console.error("메모 삭제 중 오류 발생:", error);
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-  
   useEffect(() => {
     fetchRecords();
   }, [startDate, endDate, customerName]); // 날짜 또는 고객명 변경 시에 fetchRecords 실행
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchRecords();
+    }, [startDate, endDate, customerName])
+  );
+
+
 
   const onStartDateChange = (event, selectedDate) => {
     setShowStartPicker(false);
@@ -226,13 +199,7 @@ function RecordListScreen({ navigation }) {
               </Text>
             )}
             <Text style={styles.recordTitle}>{item.summaryShort}</Text>
-
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDeleteSummary(item.summaryId)}
-            >
-              <Text style={styles.deleteButtonText}>삭제</Text>
-            </TouchableOpacity>
+  
           </TouchableOpacity>
         )}
       />

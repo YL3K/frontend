@@ -4,7 +4,7 @@ import { Linking } from "react-native";
 import axios from "axios";
 import { useSelector } from 'react-redux';
 
-function RecordDetailScreen({ route }) {
+function RecordDetailScreen({ route,navigation }) {
   const { summaryId } = route.params || {}; // route.params가 undefined일 경우를 대비
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -90,7 +90,6 @@ function RecordDetailScreen({ route }) {
         {
           summaryId,
           memo: memoInput,
-          userId,
         },
         {
           headers: {
@@ -189,8 +188,39 @@ function RecordDetailScreen({ route }) {
     }));
   };
 
+  const handleDeleteSummary = (summaryId) => {
+    Alert.alert(
+        "요약 삭제",
+        "정말로 삭제하시겠습니까?",
+        [
+            {
+                text: "취소",
+                style: "cancel",
+            },
+            {
+                text: "확인",
+                onPress: async () => {
+                    try {
+                        setLoading(true);
+                        const response = await axios.delete(
+                            `http://10.0.2.2:8080/api/record/${summaryId}`,
+                            { headers: { Authorization: `Bearer ${accessToken}` } }
+                        );
 
-
+                        if (response.status === 200) {
+                            console.log(`요약 ID ${summaryId}가 성공적으로 삭제되었습니다.`);
+                            navigation.goBack(); 
+                        }
+                    } catch (error) {
+                        console.error("요약 삭제 중 오류 발생:", error);
+                    } finally {
+                        setLoading(false);
+                    }
+                },
+            },
+        ]
+    );
+  };
 
 
 
@@ -267,6 +297,7 @@ function RecordDetailScreen({ route }) {
           </View>
         </View>
       )}
+    
 
 
       {/* 상담 내용 */}
@@ -291,7 +322,6 @@ function RecordDetailScreen({ route }) {
         </View>
       )}
 
-      <View style={styles.separator} />
 
        {/* 상담 피드백 */}
        {(userType === "counselor" || (details.feedback && details.feedback.length > 0)) && (
@@ -418,6 +448,13 @@ function RecordDetailScreen({ route }) {
           </View>
         </View>
       )}
+
+          <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteSummary(summaryId)}
+            >
+              <Text style={styles.deleteButtonText}>삭제</Text>
+            </TouchableOpacity>
 
 
 
