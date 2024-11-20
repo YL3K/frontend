@@ -54,6 +54,7 @@ function LoginScreen({ navigation }) {
       setFailModalVisible(false);
     }
     if(isSuccessModalVisible) {
+      setSuccessModalVisible(false);
       navigation.navigate('Main');
     }
   };
@@ -105,20 +106,26 @@ function LoginScreen({ navigation }) {
       </Text>
 
       {/* 성공 모달 */}
-      <ReusableModal
-        isVisible={isSuccessModalVisible}
-        onClose={closeModal}
-        title="로그인 성공"
-        content="로그인에 성공하였습니다.<br/>홈으로 이동합니다."
-      />
+      {isSuccessModalVisible && (
+        <ReusableModal
+          isVisible={isSuccessModalVisible}
+          onClose={closeModal}
+          title="로그인 성공"
+          content="로그인에 성공하였습니다.<br/>홈으로 이동합니다."
+        />
+      )}
+      
 
       {/* 실패 모달 */}
-      <ReusableModal
-        isVisible={isFailModalVisible}
-        onClose={closeModal}
-        title="로그인 실패"
-        content="로그인에 실패하였습니다.<br/>다시 시도해주시기 바랍니다."
-      />
+      {isFailModalVisible && (
+        <ReusableModal
+          isVisible={isFailModalVisible}
+          onClose={closeModal}
+          title="로그인 실패"
+          content="로그인에 실패하였습니다.<br/>다시 시도해주시기 바랍니다."
+        />
+      )}
+      
     </View>
   );
 }
