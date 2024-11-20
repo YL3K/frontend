@@ -8,8 +8,8 @@ const Stack = createStackNavigator();
 function RecordNavigator() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="RecordList" component={RecordListScreen} />
-      <Stack.Screen name="RecordDetail" component={RecordDetailScreen} />
+      <Stack.Screen name="RecordList" component={RecordListScreen} options={{headerShown: false}} />
+      <Stack.Screen name="RecordDetail" component={RecordDetailScreen} options={{headerShown: false}} />
     </Stack.Navigator>
   );
 }
