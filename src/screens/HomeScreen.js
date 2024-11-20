@@ -1,11 +1,46 @@
-import React, {useState} from 'react';
-import { View, Text, Button, Image, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import { View, Text, Linking, Image, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { screensEnabled } from 'react-native-screens';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import axios from "axios";
 
 function HomeScreen({ navigation }) {
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const user = useSelector((state) => state.user.user);
+  const userId = user?.userId;
+  const accessToken = user?.accessToken;
+
+  useEffect(()=> {
+    const fetchRecommendations = async () => {
+      if (!userId) {
+        console.error("User ID is undefined");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/keywords/top5/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        setRecommendations(response.data); // API 데이터 설정
+      } catch (err) {
+        console.error("Failed to fetch recommendations:", err);
+        setError("데이터를 가져오는 데 실패했습니다."); // 사용자에게 보여줄 에러 메시지
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [userId, accessToken]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -77,9 +112,21 @@ function HomeScreen({ navigation }) {
           )}
 
           <View style={styles.picks}>
-            <Text style={styles.pickItem}># 예금</Text>
-            <Text style={styles.pickItem}># 적금</Text>
-            <Text style={styles.pickItem}># 청년디딤돌대출</Text>
+            {isLoading ? (
+              <Text style={{ color: "#9E9E9E", fontSize: 14 }}>키워드를 불러오는 중입니다...</Text>
+            ) : recommendations.length > 0 ? (
+              recommendations.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => Linking.openURL(item.url)}
+                  style={styles.pickItemTouchable}
+                >
+                  <Text style={styles.pickItem}># {item.keyword}</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={{ color: "#9E9E9E", fontSize: 14 }}>추천 키워드가 없습니다.</Text>
+            )}
           </View>
         </View>
 
