@@ -47,7 +47,7 @@ function HomeScreen({ navigation }) {
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         {/* 헤더 */}
         <TouchableOpacity  style={styles.header} onPress={() => navigation.navigate('Member', { screen: 'Mypage' })}>
-          <Text style={styles.userName}>김국민</Text>
+          <Text style={styles.userName}>{user?.userName}</Text>
           <Text style={styles.honorific}>님</Text>
         </TouchableOpacity >
 
@@ -63,7 +63,7 @@ function HomeScreen({ navigation }) {
 
         {/* 추천 서비스 카드 */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionSubTitle}>김국민님의 상담 키워드를 기반으로</Text>
+          <Text style={styles.sectionSubTitle}>{user?.userName}님의 상담 키워드를 기반으로</Text>
           <Text style={styles.sectionTitle}>맞춤 서비스를 추천해드려요</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TouchableOpacity style={styles.recommendCard}>
