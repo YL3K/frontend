@@ -5,33 +5,62 @@ import axios from 'axios';
 import MainButton from '../../components/button/MainButton';
 import SummaryProgress from '../../components/summary/SummaryProgress';
 import SummaryComplete from '../../components/summary/SummaryComplete';
+import { useSelector } from 'react-redux';
 
 function EndSessionScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const roomId = 1; // mock data
   const counselerName = "김재동"; // mock data
 
-  useEffect(() => {
-    const requestStt = async (roomId) => {
+  const user = useSelector((state) => state.user.user);
+  const fcmToken = useSelector((state) => state.fcmToken.fcmToken);
 
-      const formData = new FormData();
-      formData.append("roomId", roomId);
-      console.log(formData.getParts());
+  const requestStt = async (roomId) => {
+    const formData = new FormData();
+    formData.append("roomId", roomId);
 
-      try {
-          await axios.post('http://10.0.2.2:8080/api/v1/stt/test/long', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-      } catch (error) {
-        console.error("STT, 요약 중 오류 발생: ", error);
-      } finally {
-        setIsLoading(false);
-      }
+    try {
+      const response = await axios.post('http://10.0.2.2:8080/api/v1/stt', formData, {
+        headers: {
+          'Authorization': "Bearer " + user.accessToken,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log(response.data.response.text);
+      return response.data.response.text;
+    } catch (error) {
+      console.error("STT 중 오류 발생: ", error);
     }
+  }
 
-    requestStt(roomId);
+  const requestSummary = async (roomId, text) => {
+    const summaryData = { roomId: roomId, text: text }
+    const notificationData = { fcmToken: fcmToken, userName: user.userName };
+
+    try {
+      const response = await axios.post('http://10.0.2.2:8080/api/v1/summary', summaryData, {
+        headers: {
+          'Authorization': "Bearer " + user.accessToken
+        }
+      });
+      console.log(response.data.resonse.summaryText);
+      console.log(response.data.resonse.summaryShort);
+      
+      await axios.post('http://10.0.2.2:8080/api/v1/notification/summary', notificationData, {
+        headers: {
+          'Authorization': "Bearer " + user.accessToken
+        }
+      });
+    } catch (error) {
+      console.error("요약 중 오류 발생: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const fullText = requestStt(roomId);
+    requestSummary(roomId, fullText);
   }, []);
 
   return (
