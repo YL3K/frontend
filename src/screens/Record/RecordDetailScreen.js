@@ -27,22 +27,22 @@ function RecordDetailScreen({ route,navigation }) {
 
   const fetchRecordDetails = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(`http://10.0.2.2:8080/api/record/summary`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        params: { summaryId },
-      });
+        const response = await axios.get(`http://10.0.2.2:8080/api/record/summary`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            params: { summaryId },
+        });
 
-      console.log("Fetched details:", response.data); // API 응답 디버깅
-      setDetails(response.data?.response?.data || {}); // response.data.response.data를 할당
+        console.log("Fetched details:", response.data);
+        setDetails(response.data?.response?.data || {});
     } catch (error) {
-      console.error("Error fetching record details:", error);
+        console.error("Error fetching record details:", error);
     } finally {
-      setLoading(false);
+        setLoading(false); // 로딩 상태 종료
     }
-  };
+};
+
 
   const handleFeedbackSubmit = async () => {
     if (!feedbackInput.trim()) {
@@ -54,7 +54,7 @@ function RecordDetailScreen({ route,navigation }) {
       const response = await axios.post(
         `http://10.0.2.2:8080/api/record/feedback`,
         {
-          summaryId, 
+          summaryId,
           feedback: feedbackInput,
         },
         {
@@ -64,9 +64,14 @@ function RecordDetailScreen({ route,navigation }) {
           },
         }
       );
+
       if (response.status === 200) {
-        setFeedbackInput("");
-        fetchRecordDetails();
+        // 피드백 상태 직접 업데이트
+        setDetails((prevDetails) => ({
+          ...prevDetails,
+          feedback: feedbackInput,
+        }));
+        setFeedbackInput(""); // 입력 필드 초기화
       }
     } catch (error) {
       console.error("피드백 추가 중 오류 발생:", error);
@@ -78,13 +83,13 @@ function RecordDetailScreen({ route,navigation }) {
 
 
 
+
   const handleMemoSubmit = async () => {
     if (!memoInput.trim()) {
       console.error("메모 내용이 비어 있습니다.");
       return;
     }
     try {
-      setLoading(true);
       const response = await axios.post(
         `http://10.0.2.2:8080/api/record/memo`,
         {
@@ -98,16 +103,32 @@ function RecordDetailScreen({ route,navigation }) {
           },
         }
       );
+  
       if (response.status === 200) {
+        const newMemoId = response.data.response.data.memoId; // 추가된 메모 ID 가져오기
+        console.log("추가된 메모 ID:", newMemoId);
+  
+        // 기존 상태에 메모 추가
+        setDetails((prevDetails) => ({
+          ...prevDetails,
+          memos: [
+            ...(prevDetails?.memos || []),
+            {
+              memoId: newMemoId,
+              memo: memoInput,
+              createdAt: response.data.response.data.createdAt,
+            },
+          ],
+        }));
+  
+        // 입력 필드 초기화
         setMemoInput("");
-        fetchRecordDetails();
       }
     } catch (error) {
       console.error("메모 추가 중 오류 발생:", error);
-    } finally {
-      setLoading(false);
     }
   };
+  
 
   const handleDeleteMemo = async (memoId) => {
     try {
@@ -119,7 +140,6 @@ function RecordDetailScreen({ route,navigation }) {
           {
             text: "확인",
             onPress: async () => {
-              setLoading(true);
               const response = await axios.delete(
                 `http://10.0.2.2:8080/api/record/memo/${memoId}`,
                 {
@@ -128,8 +148,14 @@ function RecordDetailScreen({ route,navigation }) {
                   },
                 }
               );
+
               if (response.status === 200) {
-                fetchRecordDetails(); // 데이터 다시 로드
+                setDetails((prevDetails) => ({
+                  ...prevDetails,
+                  memos: prevDetails.memos.filter(
+                    (memo) => memo.memoId !== memoId
+                  ),
+                }));
               }
             },
           },
@@ -138,25 +164,24 @@ function RecordDetailScreen({ route,navigation }) {
       );
     } catch (error) {
       console.error("메모 삭제 중 오류 발생:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
+
   const handleModifyMemo = (memoId) => {
     setDetails((prevDetails) => ({
-      ...prevDetails,
-      memos: prevDetails.memos.map((memo) =>
-        memo.memoId === memoId
-          ? { ...memo, isEditing: true, editingContent: memo.memo }
-          : memo
-      ),
+        ...prevDetails,
+        memos: prevDetails.memos.map((memo) =>
+            memo.memoId === memoId
+                ? { ...memo, isEditing: true, editingContent: memo.memo }
+                : memo
+        ),
     }));
-  };
+};
+
 
   const handleSaveMemo = async (memoId, newContent) => {
     try {
-      setLoading(true);
       const response = await axios.patch(
         `http://10.0.2.2:8080/api/record/memo/${memoId}`,
         { memo: newContent },
@@ -167,26 +192,38 @@ function RecordDetailScreen({ route,navigation }) {
           },
         }
       );
+
       if (response.status === 200) {
-        fetchRecordDetails();
+        // 수정된 데이터만 업데이트
+        setDetails((prevDetails) => ({
+          ...prevDetails,
+          memos: prevDetails.memos.map((memo) =>
+            memo.memoId === memoId
+              ? { ...memo, memo: newContent, isEditing: false }
+              : memo
+          ),
+        }));
       }
     } catch (error) {
       console.error("메모 수정 중 오류 발생:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
+
+
+
+
   const handleCancelEdit = (memoId) => {
     setDetails((prevDetails) => ({
-      ...prevDetails,
-      memos: prevDetails.memos.map((memo) =>
-        memo.memoId === memoId
-          ? { ...memo, isEditing: false, editingContent: undefined }
-          : memo
-      ),
+        ...prevDetails,
+        memos: prevDetails.memos.map((memo) =>
+            memo.memoId === memoId
+                ? { ...memo, isEditing: false, editingContent: undefined }
+                : memo
+        ),
     }));
-  };
+};
+
 
   const handleDeleteSummary = (summaryId) => {
     Alert.alert(
