@@ -11,14 +11,14 @@ function HomeScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.user?.user);
   const userId = user?.userId;
   const accessToken = user?.accessToken;
 
   useEffect(()=> {
     const fetchRecommendations = async () => {
       if (!userId) {
-        console.error("User ID is undefined");
+        console.log("User ID is undefined");
         setIsLoading(false);
         return;
       }
