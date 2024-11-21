@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import MonthPicker from 'react-native-month-year-picker';
 import axios from 'axios';
@@ -48,30 +48,36 @@ function AnalysisScreen() {
   const initialEndYearMonth = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}`;
   const initialStartYearMonth = `${today.getFullYear() - 1}.${String(today.getMonth() + 1).padStart(2, '0')}`;
 
+  //월별 평균상담시간 날짜 초기 값 설정
   const [startYearMonth, setStartYearMonth] = useState(initialStartYearMonth);
   const [endYearMonth, setEndYearMonth] = useState(initialEndYearMonth);
-  const [startYearMonthCount, setStartYearMonthCount] = useState(initialStartYearMonth);
-  const [endYearMonthCount, setEndYearMonthCount] = useState(initialEndYearMonth);
   const [isStartPickerVisible, setStartPickerVisible] = useState(false);
   const [isEndPickerVisible, setEndPickerVisible] = useState(false);
+
+  //월별 상담 건수 날짜 초기 값 설정
+  const [startYearMonthCount, setStartYearMonthCount] = useState(initialStartYearMonth);
+  const [endYearMonthCount, setEndYearMonthCount] = useState(initialEndYearMonth);
   const [isStartCountPickerVisible, setStartCountPickerVisible] = useState(false);
   const [isEndCountPickerVisible, setEndCountPickerVisible] = useState(false);
   
+  //각 데이터 값 설정
   const [ageData, setAgeData] = useState([]);
   const [keywordData, setKeywordData] = useState([]);
   const [timeData, setTimeData] = useState({});
   const [durationData, setDurationData] = useState([]);
   const [countData, setCountData] = useState([]);
 
+  //각 데이터 로딩 값 설정
   const [isAgeLoading, setIsAgeLoading] = useState(true);
   const [isKeywordLoading, setIsKeywordLoading] = useState(true);
   const [isTimeLoading, setIsTimeLoading] = useState(true);
   const [isDurationLoading, setIsDurationLoading] = useState(true);
   const [isCountLoading, setIsCountLoading] = useState(true);
 
-
+  //에러 상태
   const [error, setError] = useState(null);
 
+  //연령 데이터 Fetch
   const fetchAgeData = useCallback(async () => {
     setIsAgeLoading(true);
     try {
@@ -101,6 +107,7 @@ function AnalysisScreen() {
     }
   }, [accessToken]);
 
+  //키워드 데이터 Fetch
   const fetchKeywordData = useCallback(async () => {
     setIsKeywordLoading(true);
     try {
@@ -118,6 +125,7 @@ function AnalysisScreen() {
     }
   }, [accessToken]);
 
+  //상담 발생 시각 데이터 Fetch
   const fetchTimeData = useCallback(async () => {
     setIsTimeLoading(true);
     try {
@@ -136,37 +144,37 @@ function AnalysisScreen() {
     }
   }, [accessToken]);
 
+  //상담 평균 진행 시간 데이터 Fetch
   const fetchDurationData = useCallback(
     async (start = startYearMonth, end = endYearMonth) => {
-      
-      try {
-        const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/runtime/range/${start}/${end}`, {
+    try {
+      const response = await axios.get(
+        `http://10.0.2.2:8080/api/v1/record/analysis/runtime/range/${start}/${end}`,
+        {
           headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
+            Authorization: `Bearer ${accessToken}`,
+          },
         });
-        const formattedData = Object.entries(response.data).map(([yearMonth, duration]) => ({
-          yearMonth,
-          duration: parseDuration(duration)
-        }));
-        setDurationData(formattedData);
-      } catch (error) {
-        console.error("Error fetching duration data:", error.message);
-      } finally {
-        setIsDurationLoading(false);
-      }
-    },
-    [accessToken]
-  );
-  
+      const formattedData = Object.entries(response.data).map(([yearMonth, duration]) => ({
+        yearMonth,
+        duration: parseDuration(duration),
+      }));
+      setDurationData(formattedData);
+    } catch (error) {
+      console.error("Error fetching duration data:", error.message);
+    } finally {
+      setIsDurationLoading(false);
+    }
+  }, [accessToken, startYearMonth, endYearMonth]); // 의존성 배열
 
+  //상담 월별 건수 데이터 Fetch
   const fetchCountData = useCallback(
     async (start = startYearMonthCount, end = endYearMonthCount) => {
       try {
         const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/count/range/${start}/${end}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`
-          }
+          },
         });
         const formattedData = Object.entries(response.data).map(([yearMonth, count]) => ({
           yearMonth,
@@ -178,10 +186,8 @@ function AnalysisScreen() {
       } finally {
         setIsCountLoading(false);
       }
-    },
-    [accessToken]
+    },[accessToken, startYearMonthCount, endYearMonthCount]
   );
-  
 
   useEffect(() => {
     fetchAgeData();
@@ -191,29 +197,34 @@ function AnalysisScreen() {
     fetchCountData();
   }, [fetchAgeData, fetchKeywordData, fetchTimeData, fetchDurationData, fetchCountData]);
 
+  //상담 평균 시간 날짜 변경 핸들러
   const handleConfirmStart = (date) => {
     const newStartYearMonth = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
     setStartYearMonth(newStartYearMonth);
-    fetchDurationData(newStartYearMonth, endYearMonth); 
+    setIsDurationLoading(true);
+    fetchDurationData(newStartYearMonth, endYearMonth);
   };
   
   const handleConfirmEnd = (date) => {
     const newEndYearMonth = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
     setEndYearMonth(newEndYearMonth);
-    fetchDurationData(startYearMonth, newEndYearMonth); 
+    setIsDurationLoading(true);
+    fetchDurationData(startYearMonth, newEndYearMonth);
   };
   
-
+  // 상담 건수 날짜 변경 핸들러
   const handleConfirmStartCount = (date) => {
     const newStartYearMonthCount = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
     setStartYearMonthCount(newStartYearMonthCount);
-    fetchCountData(newStartYearMonthCount, endYearMonthCount); 
+    setIsCountLoading(true);
+    fetchCountData(newStartYearMonthCount, endYearMonthCount);
   };
-  
+
   const handleConfirmEndCount = (date) => {
     const newEndYearMonthCount = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
     setEndYearMonthCount(newEndYearMonthCount);
-    fetchCountData(startYearMonthCount, newEndYearMonthCount); 
+    setIsCountLoading(true);
+    fetchCountData(startYearMonthCount, newEndYearMonthCount);
   };
   
 
@@ -221,44 +232,65 @@ function AnalysisScreen() {
     return <Text style={styles.errorText}>{JSON.stringify(error, null, 2)}</Text>;
   }
 
-  const isLoading =
-    isAgeLoading || isKeywordLoading || isTimeLoading || isDurationLoading || isCountLoading;
-
-  if (isLoading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
-        <Text>데이터를 불러오는 중입니다...</Text>
-      </View>
-    );
-  }
-
   return (
     <ScrollView style={styles.container}>
+      {/* 고객 연령층 차트 */}
       <Text style={styles.title}>고객 연령층</Text>
-      {ageData.length > 0 && (
-        <View style={styles.chartContainer}>
-          <AgePieChart data={ageData} />
-        </View>
-      )} 
+      <View style={styles.chartContainer}>
+        {isAgeLoading ? (
+          <ActivityIndicator size="small" color="#007bff" />
+        ) : (
+          ageData.length > 0 ? (
+              <AgePieChart data={ageData} />
+          ) : (
+            <Text>데이터가 없습니다.</Text>
+          )
+        )}
+      </View>
+
+      {/* 키워드 빈도 차트 */}
       <Text style={styles.title}>키워드 빈도</Text>
-      {keywordData.length > 0 && (
-        <View style={styles.chartContainer}>
-          <KeywordCloud words={keywordData} />
-        </View>
-      )}
+      <View style={styles.chartContainer}>
+        {isKeywordLoading ? (
+          <ActivityIndicator size="small" color="#007bff" />
+        ) : (
+          keywordData.length > 0 ? (
+              <KeywordCloud words={keywordData} />
+          ) : (
+            <Text>데이터가 없습니다.</Text>
+          )
+        )}
+      </View>
+
+      {/* 키워드 랭킹 차트 */}
       <Text style={styles.title}>키워드 랭킹</Text>
-      {keywordData.length > 0 && (
-        <View style={styles.chartContainer}>
-          <KeywordList data={keywordData} />
-        </View>
-      )}
+      <View style={styles.chartContainer}>
+        {isKeywordLoading ? (
+          <ActivityIndicator size="small" color="#007bff" />
+        ) : (
+          keywordData.length > 0 ? (
+              <KeywordList data={keywordData} />
+          ) : (
+            <Text>데이터가 없습니다.</Text>
+          )
+        )}
+      </View>
+
+      {/* 상담 발생 시각 차트 */}
       <Text style={styles.title}>상담 발생 시각</Text>
-      {Object.keys(timeData).length > 0 && (
-        <View style={styles.chartContainer}>
-          <ClockChart data={timeData} />
-        </View>
-      )}
+      <View style={styles.chartContainer}>
+        {isTimeLoading ? (
+          <ActivityIndicator size="small" color="#007bff" />
+        ) : (
+          Object.keys(timeData).length > 0 ? (
+              <ClockChart data={timeData} />
+          ) : (
+            <Text>데이터가 없습니다.</Text>
+          )
+        )}
+      </View>
+
+      {/* 상담 평균 진행 시간 차트 */}
       <Text style={styles.title}>상담 평균 시간</Text>
       <View style={styles.dateContainer}>
         <TouchableOpacity style={styles.dateButton} onPress={() => setStartPickerVisible(true)}>
@@ -268,11 +300,17 @@ function AnalysisScreen() {
           <Text style={styles.buttonText}>종료 : {endYearMonth}</Text>
         </TouchableOpacity>
       </View>
-      {durationData.length > 0 && (
-        <View style={styles.chartContainer}>
-          <DurationChart data={durationData} />
-        </View>
-      )}
+      <View style={styles.chartContainer}>
+        {isDurationLoading ? (
+          <ActivityIndicator size="small" color="#007bff" />
+        ) : (
+          durationData.length > 0 ? (
+              <DurationChart data={durationData} />
+          ) : (
+            <Text>데이터가 없습니다.</Text>
+          )
+        )}
+      </View>
       {isStartPickerVisible && (
         <MonthPicker
           onChange={(event, date) => {
@@ -298,6 +336,7 @@ function AnalysisScreen() {
         />
       )}
 
+      {/* 월별 상담 건수 데이터 */}
       <Text style={styles.title}>상담 건수</Text>
       <View style={styles.dateContainer}>
         <TouchableOpacity style={styles.dateButton} onPress={() => setStartCountPickerVisible(true)}>
@@ -307,15 +346,17 @@ function AnalysisScreen() {
           <Text style={styles.buttonText}>종료 : {endYearMonthCount}</Text>
         </TouchableOpacity>
       </View>
-      {isCountLoading ? (
-        <ActivityIndicator size="small" color="#007bff" />
-      ) : (
-        countData.length > 0 && (
-          <View style={styles.chartContainer}>
-            <CountChart data={countData} />
-          </View>
-        )
-      )}
+      <View style={styles.chartContainer}>
+        {isCountLoading ? (
+          <ActivityIndicator size="small" color="#007bff" />
+        ) : (
+          countData.length > 0 ? (
+              <CountChart data={countData} />
+          ) : (
+            <Text>데이터가 없습니다.</Text>
+          )
+        )}
+      </View>
 
       {isStartCountPickerVisible && (
         <MonthPicker
