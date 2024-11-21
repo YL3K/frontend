@@ -41,7 +41,7 @@ function MyPageScreen({ navigation }) {
       {/* 메뉴 섹션 */}
       <View style={styles.menuContainer}>
         <TouchableOpacity style={styles.menuItem}
-        onPress={() => navigation.navigate('Record',{screen:'RecordListScreen' })}>
+        onPress={() => navigation.navigate('RecordMain',{screen:'RecordListScreen' })}>
           <Icon name="history" size={24} color="#000" />
           <Text style={styles.menuText}>상담 내역</Text>
         </TouchableOpacity>
