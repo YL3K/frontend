@@ -4,16 +4,22 @@ import LoginScreen from '../../screens/member/LoginScreen';
 import SignUpScreen from '../../screens/member/SignUpScreen';
 import ConfirmScreen from '../../screens/member/ConfirmScreen';
 import MyPageScreen from '../../screens/member/MyPageScreen';
+import LogoHeader from '../../components/header/LogoHeader';
 
 const Stack = createStackNavigator();
 
 function MemberNavigator() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="Login" component={LoginScreen} options={{headerShown: false}} />
-      <Stack.Screen name="SignUp" component={SignUpScreen} options={{headerShown: false}} />
-      <Stack.Screen name="Confirm" component={ConfirmScreen} options={{headerShown: false}} />
-      <Stack.Screen name="Mypage" component={MyPageScreen} options={{headerShown: false}} />
+    <Stack.Navigator
+      screenOptions={{
+        header: (props) => <LogoHeader {...props} />,
+        headerShown: true
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen}/>
+      <Stack.Screen name="SignUp" component={SignUpScreen} />
+      <Stack.Screen name="Confirm" component={ConfirmScreen}/>
+      <Stack.Screen name="Mypage" component={MyPageScreen} />
     </Stack.Navigator>
   );
 }
