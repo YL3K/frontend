@@ -34,7 +34,6 @@ const HomeHeader = () => {
   const handleStartCounseling = async () => {
     await handleAddCustomer();
     console.log("상담 시작");
-    navigation.navigate('Counsel', {screen:'CounselorWaitingScreen'});
   };
 
   // 상담 취소 버튼 클릭 시 처리
