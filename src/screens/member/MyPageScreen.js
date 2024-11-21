@@ -34,7 +34,6 @@ function MyPageScreen({ navigation }) {
         <View style={styles.profileContainer}>
         <Icon name="account-circle" size={100} color="#DCD9D9" style={styles.profileIcon} />
         <Text style={styles.nameText}>{user.userName}<Text style={styles.addText}>님</Text></Text>
-        <Text>UserId : {user.userId}</Text>
         <TouchableOpacity style={styles.editButton}>
           <Text style={styles.editButtonText}>내 정보 수정</Text>
         </TouchableOpacity>
@@ -45,7 +44,8 @@ function MyPageScreen({ navigation }) {
 
       {/* 메뉴 섹션 */}
       <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem}
+        onPress={() => navigation.navigate('Record',{screen:'RecordListScreen' })}>
           <Icon name="history" size={24} color="#000" />
           <Text style={styles.menuText}>상담 내역</Text>
         </TouchableOpacity>

@@ -136,45 +136,52 @@ function AnalysisScreen() {
     }
   }, [accessToken]);
 
-  const fetchDurationData = useCallback(async () => {
-    setIsDurationLoading(true);
-    try {
-      const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/runtime/range/${startYearMonth}/${endYearMonth}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
-      const formattedData = Object.entries(response.data).map(([yearMonth, duration]) => ({
-        yearMonth,
-        duration: parseDuration(duration)
-      }));
-      setDurationData(formattedData);
-    } catch (error) {
-      console.error("Error fetching duration data:", error.message);
-    } finally {
-      setIsDurationLoading(false);
-    }
-  }, [startYearMonth, endYearMonth, accessToken]);
+  const fetchDurationData = useCallback(
+    async (start = startYearMonth, end = endYearMonth) => {
+      
+      try {
+        const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/runtime/range/${start}/${end}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+        const formattedData = Object.entries(response.data).map(([yearMonth, duration]) => ({
+          yearMonth,
+          duration: parseDuration(duration)
+        }));
+        setDurationData(formattedData);
+      } catch (error) {
+        console.error("Error fetching duration data:", error.message);
+      } finally {
+        setIsDurationLoading(false);
+      }
+    },
+    [accessToken]
+  );
+  
 
-  const fetchCountData = useCallback(async () => {
-    setIsCountLoading(true);
-    try {
-      const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/count/range/${startYearMonthCount}/${endYearMonthCount}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
-      const formattedData = Object.entries(response.data).map(([yearMonth, count]) => ({
-        yearMonth,
-        count,
-      }));
-      setCountData(formattedData);
-    } catch (error) {
-      console.error("Error fetching count data:", error.message);
-    } finally {
-      setIsCountLoading(false);
-    }
-  }, [startYearMonthCount, endYearMonthCount, accessToken]);
+  const fetchCountData = useCallback(
+    async (start = startYearMonthCount, end = endYearMonthCount) => {
+      try {
+        const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/count/range/${start}/${end}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+        const formattedData = Object.entries(response.data).map(([yearMonth, count]) => ({
+          yearMonth,
+          count,
+        }));
+        setCountData(formattedData);
+      } catch (error) {
+        console.error("Error fetching count data:", error.message);
+      } finally {
+        setIsCountLoading(false);
+      }
+    },
+    [accessToken]
+  );
+  
 
   useEffect(() => {
     fetchAgeData();
@@ -185,24 +192,30 @@ function AnalysisScreen() {
   }, [fetchAgeData, fetchKeywordData, fetchTimeData, fetchDurationData, fetchCountData]);
 
   const handleConfirmStart = (date) => {
-    setStartYearMonth(`${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`);
-    setStartPickerVisible(false);
+    const newStartYearMonth = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+    setStartYearMonth(newStartYearMonth);
+    fetchDurationData(newStartYearMonth, endYearMonth); 
   };
-
+  
   const handleConfirmEnd = (date) => {
-    setEndYearMonth(`${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`);
-    setEndPickerVisible(false);
+    const newEndYearMonth = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+    setEndYearMonth(newEndYearMonth);
+    fetchDurationData(startYearMonth, newEndYearMonth); 
   };
+  
 
   const handleConfirmStartCount = (date) => {
-    setStartYearMonthCount(`${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`);
-    setStartCountPickerVisible(false);
+    const newStartYearMonthCount = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+    setStartYearMonthCount(newStartYearMonthCount);
+    fetchCountData(newStartYearMonthCount, endYearMonthCount); 
   };
-
+  
   const handleConfirmEndCount = (date) => {
-    setEndYearMonthCount(`${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`);
-    setEndCountPickerVisible(false);
+    const newEndYearMonthCount = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+    setEndYearMonthCount(newEndYearMonthCount);
+    fetchCountData(startYearMonthCount, newEndYearMonthCount); 
   };
+  
 
   if (error) {
     return <Text style={styles.errorText}>{JSON.stringify(error, null, 2)}</Text>;
@@ -294,10 +307,14 @@ function AnalysisScreen() {
           <Text style={styles.buttonText}>종료 : {endYearMonthCount}</Text>
         </TouchableOpacity>
       </View>
-      {countData.length > 0 && (
-        <View style={styles.chartContainer}>
-          <CountChart data={countData} />
-        </View>
+      {isCountLoading ? (
+        <ActivityIndicator size="small" color="#007bff" />
+      ) : (
+        countData.length > 0 && (
+          <View style={styles.chartContainer}>
+            <CountChart data={countData} />
+          </View>
+        )
       )}
 
       {isStartCountPickerVisible && (
@@ -312,6 +329,7 @@ function AnalysisScreen() {
           mode="monthYear"
         />
       )}
+
       {isEndCountPickerVisible && (
         <MonthPicker
           onChange={(event, date) => {
@@ -324,6 +342,7 @@ function AnalysisScreen() {
           mode="monthYear"
         />
       )}
+
     </ScrollView>
   );
 }

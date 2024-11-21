@@ -8,7 +8,9 @@ import axios from "axios";
 function HomeScreen({ navigation }) {
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [recentKeyword, setRecentKeyword] = useState([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(true);
+  const [isLoadingRecentKeyword, setIsLoadingRecentKeyword] = useState(true);
   const [error, setError] = useState(null);
   
   const user = useSelector((state) => state.user?.user);
@@ -35,11 +37,35 @@ function HomeScreen({ navigation }) {
         console.error("Failed to fetch recommendations:", err);
         setError("데이터를 가져오는 데 실패했습니다."); // 사용자에게 보여줄 에러 메시지
       } finally {
-        setIsLoading(false);
+        setIsLoadingRecommendations(false);
+      }
+    };
+
+    const fetchRecentKeyword = async () => {
+      if (!userId) {
+        console.error("User ID is undefined");
+        setIsLoadingRecentKeyword(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/keywords/recent/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        setRecentKeyword(response.data); // 최근 키워드 설정
+      } catch (err) {
+        console.error("Failed to fetch recent keyword:", err);
+        setError("최근 키워드를 가져오는 데 실패했습니다."); // 사용자에게 보여줄 에러 메시지
+      } finally {
+        setIsLoadingRecentKeyword(false);
       }
     };
 
     fetchRecommendations();
+    fetchRecentKeyword();
   }, [userId, accessToken]);
 
   return (
@@ -47,7 +73,7 @@ function HomeScreen({ navigation }) {
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         {/* 헤더 */}
         <TouchableOpacity  style={styles.header} onPress={() => navigation.navigate('Member', { screen: 'Mypage' })}>
-          <Text style={styles.userName}>김국민</Text>
+          <Text style={styles.userName}>{user?.userName}</Text>
           <Text style={styles.honorific}>님</Text>
         </TouchableOpacity >
 
@@ -63,29 +89,22 @@ function HomeScreen({ navigation }) {
 
         {/* 추천 서비스 카드 */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionSubTitle}>김국민님의 상담 키워드를 기반으로</Text>
+          <Text style={styles.sectionSubTitle}>{user?.userName}님의 상담 키워드를 기반으로</Text>
           <Text style={styles.sectionTitle}>맞춤 서비스를 추천해드려요</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity style={styles.recommendCard}>
-              <Text style={styles.badge}>추천</Text>
-              <Text style={styles.recommendTitle}>전체계좌조회</Text>
-              <Text style={styles.recommendDescription}>전체계좌를 조회할 수 있어요</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.recommendCard}>
-              <Text style={styles.badge}>추천</Text>
-              <Text style={styles.recommendTitle}>이체</Text>
-              <Text style={styles.recommendDescription}>간편한 송금과 이체를 관리해요</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.recommendCard}>
-              <Text style={styles.badge}>추천</Text>
-              <Text style={styles.recommendTitle}>공과금 납부</Text>
-              <Text style={styles.recommendDescription}>공과금 납부도 스마트하게 관리할 수 있어요</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.recommendCard}>
-              <Text style={styles.badge}>추천</Text>
-              <Text style={styles.recommendTitle}>퇴직연금</Text>
-              <Text style={styles.recommendDescription}>퇴직연금을 관리하고 입금/이체/ETF를 한번에 관리해요</Text>
-            </TouchableOpacity>
+            {isLoadingRecommendations ? (
+              <Text style={{ color: "#9E9E9E", fontSize: 14 }}>키워드를 불러오는 중입니다...</Text>
+            ) : recommendations.length > 0 ? (
+              recommendations.map((item, index) => (
+                <TouchableOpacity key={index} onPress={() => Linking.openURL(item.url)} style={styles.recommendCard}>
+                  <Text style={styles.badge}>추천</Text>
+                  <Text style={styles.recommendTitle}>{item.keyword}</Text>
+                  <Text style={styles.recommendDescription}>{item.description}</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={{ color: "#9E9E9E", fontSize: 14 }}>추천 서비스가 없습니다.</Text>
+            )}
           </ScrollView>
         </View>
 
@@ -112,16 +131,16 @@ function HomeScreen({ navigation }) {
           )}
 
           <View style={styles.picks}>
-            {isLoading ? (
+            {isLoadingRecentKeyword ? (
               <Text style={{ color: "#9E9E9E", fontSize: 14 }}>키워드를 불러오는 중입니다...</Text>
-            ) : recommendations.length > 0 ? (
-              recommendations.map((item, index) => (
+            ) : recentKeyword.length > 0 ? (
+              recentKeyword.map((item, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() => Linking.openURL(item.url)}
+                  onPress={() => { if (item[1]) { Linking.openURL(item[1]); }}}
                   style={styles.pickItemTouchable}
                 >
-                  <Text style={styles.pickItem}># {item.keyword}</Text>
+                  <Text style={styles.pickItem}># {item[0]}</Text>
                 </TouchableOpacity>
               ))
             ) : (
@@ -241,7 +260,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginRight: 10,
     width: 120,
-    height: 130,
     alignItems: 'flex-start',
   },
   badge: {
@@ -257,7 +275,7 @@ const styles = StyleSheet.create({
   },
   recommendTitle: {
     fontWeight: 'bold',
-    fontSize: 15,
+    fontSize: 16,
     marginBottom: 5,
     marginHorizontal: 5,
   },
