@@ -4,8 +4,10 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import checked from '../../../assets/check.png'
 import unchecked from '../../../assets/uncheck.png'
-import { useSelector } from 'react-redux';
 import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCustomerAndCounselor } from '../../actions/counselActions';
+import { loadUser } from '../../actions/userActions';
 
 function CounselorWaitingScreen({ navigation }) {
 
@@ -54,11 +56,13 @@ function CounselorWaitingScreen({ navigation }) {
     const [year, setYear] = useState(null);
     const [month, setMonth] = useState(null);
     const consultationsThisMonth = 151;
-
+    const userInform = useSelector((state) => state.user).user;
     const [isCameraChecked, setIsCameraChecked] = useState(false);
     const [isMicChecked, setIsMicChecked] = useState(false);
     const [isQueueAvailable, setIsQueueAvailable] = useState(false); 
     const [isStartButtonEnabled, setIsStartButtonEnabled] = useState(false);
+    const dispatch = useDispatch();
+
     const [waitingList, setWaitingList] = useState([]); 
 
     useEffect(async() => {
@@ -119,9 +123,10 @@ function CounselorWaitingScreen({ navigation }) {
           const response = await axios.post('http://10.0.2.2:8080/api/v1/counsel/queue/assign', {}, {
             headers: {
               Authorization: `Bearer ${user.accessToken}`  // 토큰을 Authorization 헤더에 넣기
-            }
-        });
-    
+            }});
+            const customerId = response.data.response.data.userId
+            const counselorId = userInform.userId
+            dispatch(setCustomerAndCounselor(customerId, counselorId));
         } catch (error) {
           console.error(error);
         }  
