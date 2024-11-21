@@ -8,8 +8,49 @@ import { useSelector } from 'react-redux';
 import axios from 'axios';
 
 function CounselorWaitingScreen({ navigation }) {
-    const user = useSelector((state) => state.user.user);
-    const counselorName = '이국민';
+
+  const user = useSelector((state) => state.user?.user);
+  const userId = useSelector((state) => state.user.user?.userId);
+  const counselorName = useSelector((state) => state.user.user?.userName);
+  const [waitingQueue, setWaitingQueue] = useState([]); // 대기열 상태
+
+  // 컴포넌트가 마운트될 때 WebSocket 연결 설정
+  useEffect(() => {
+    const socket = new WebSocket('ws://10.0.2.2:8080/ws'); // 서버 WebSocket URL
+
+    // WebSocket 연결이 열렸을 때 처리
+    socket.onopen = () => {
+      console.log('WebSocket connected');
+    };
+
+    // 서버에서 메시지를 받을 때 처리
+    socket.onmessage = async (event) => {
+      const message = JSON.parse(event.data);
+      console.log('Received message:', message);
+      // 대기열 상태가 변경되었을 때 상태 업데이트
+      if (message.type === 'queue_update') {
+        console.log("대기열 업데이트");
+        await getWaitingListAPI();
+      }
+    };
+
+    // WebSocket 연결이 닫혔을 때 처리
+    socket.onclose = () => {
+      console.log('WebSocket disconnected');
+    };
+
+    // 컴포넌트가 언마운트될 때 WebSocket 연결 종료
+    return () => {
+      socket.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    // waitingQueue 상태가 업데이트될 때 로그 출력
+    console.log("Updated waitingQueue:", waitingQueue);
+  }, [waitingQueue]);
+
+  // 2.상담사 폰화면
     const [year, setYear] = useState(null);
     const [month, setMonth] = useState(null);
     const consultationsThisMonth = 151;
@@ -18,23 +59,15 @@ function CounselorWaitingScreen({ navigation }) {
     const [isMicChecked, setIsMicChecked] = useState(false);
     const [isQueueAvailable, setIsQueueAvailable] = useState(false); 
     const [isStartButtonEnabled, setIsStartButtonEnabled] = useState(false);
+    const [waitingList, setWaitingList] = useState([]); 
 
-    // 상담 대기열 (백엔드 요청할 것 -> 실시간 바뀌어야함)
-    const waitingList = [
-        { id: 1, name: '박*민 고객님', waitTime: '30분째' },
-        { id: 2, name: '오*민 고객님', waitTime: '27분째' },
-        { id: 3, name: '최*민 고객님', waitTime: '27분째' },
-        { id: 4, name: '서*민 고객님', waitTime: '20분째' },
-        { id: 5, name: '황*민 고객님', waitTime: '10분째' },
-        { id: 6, name: '임*민 고객님', waitTime: '3분째' },
-    ];
-
-    useEffect(() => {
+    useEffect(async() => {
         const date = new Date();
         setYear(date.getFullYear()); 
         setMonth(date.getMonth() + 1); 
         // 해당 년, 달의 상담 수 갱신
         requestPermissions();
+        await getWaitingListAPI();
     }, [])
 
     useEffect(() => {
@@ -62,9 +95,6 @@ function CounselorWaitingScreen({ navigation }) {
 
         await checkAndRequestPermission(cameraPermission, setIsCameraChecked);
         await checkAndRequestPermission(micPermission, setIsMicChecked);
-        if (waitingList.length > 1) {
-            setIsQueueAvailable(true);
-        }
     }
   
     const handlePreviousMonth = () => {
@@ -96,6 +126,59 @@ function CounselorWaitingScreen({ navigation }) {
           console.error(error);
         }  
     };
+
+    const getWaitingListAPI = async () => {
+      try {
+        const response = await axios.get('http://10.0.2.2:8080/api/v1/counsel/queue', {
+            headers: {
+              Authorization: `Bearer ${user.accessToken}`  // 토큰을 Authorization 헤더에 넣기
+            }
+        });
+
+        const waitingData = response.data.response.data;
+        console.log(waitingData);
+        setWaitingList(waitingData);
+        if (waitingData.length >= 1) {
+            setIsQueueAvailable(true);
+        }
+    
+      } catch (error) {
+          console.error(error);
+      }  
+    };
+
+    // 시간을 경과 시간 형식으로 변환하는 함수
+    const getElapsedTime = (startTime) => {
+      const start = new Date(startTime); // 클라이언트의 대기 시작 시간
+      const now = new Date(); // 현재 시간
+      const diff = Math.floor((now - start) / 1000); // 시간 차이 (초 단위)
+
+      const hours = Math.floor(diff / 3600);
+      const minutes = Math.floor((diff % 3600) / 60);
+      const seconds = diff % 60;
+
+      if (hours > 0) {
+          return `${hours}시간 ${minutes}분째`;
+      } else if (minutes > 0) {
+          return `${minutes}분째`;
+      } else {
+          return `${seconds}초째`;
+      }
+    };
+
+    useEffect(() => {
+      // 1초 간격으로 경과 시간 업데이트
+      const timer = setInterval(() => {
+          setWaitingList((prevList) =>
+              prevList.map((client) => ({
+                  ...client,
+                  elapsedTime: getElapsedTime(client.startTime),
+              }))
+          );
+      }, 1000);
+
+      return () => clearInterval(timer); // 컴포넌트 언마운트 시 타이머 정리
+    }, []);
       
 
     return (
@@ -146,10 +229,10 @@ function CounselorWaitingScreen({ navigation }) {
 
             <View style={styles.containerBox}>
                 <Text style={styles.titleText}>화상 상담 대기열</Text>
-                {waitingList.map((client) => (
-                <View key={client.id} style={[styles.rowItem, {marginTop:10}]}>
-                    <Text>{client.id}. {client.name}</Text>
-                    <Text>대기시간 {client.waitTime}</Text>
+                {waitingList?.map((client, index) => (
+                <View key={index+1} style={[styles.rowItem, {marginTop:10}]}>
+                    <Text>{index+1}. {client.userName}</Text>
+                    <Text>대기시간 {client.elapsedTime}</Text>
                 </View>
             ))}
         </View>
