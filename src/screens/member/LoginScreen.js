@@ -12,7 +12,6 @@ function LoginScreen({ navigation }) {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setPasswordVisible] = useState(false);
-  const [isSuccessModalVisible, setSuccessModalVisible] = useState(false);
   const [isFailModalVisible, setFailModalVisible] = useState(false);
   const dispatch = useDispatch();
 
@@ -40,7 +39,8 @@ function LoginScreen({ navigation }) {
         const token = await messaging().getToken();
         dispatch(setFcmToken(token));
 
-        setSuccessModalVisible(true);
+        console.log('로그인 성공');
+        navigation.navigate('Main');
 
       } catch (error) {
         // console.error('로그인 실패:', error);
@@ -52,10 +52,6 @@ function LoginScreen({ navigation }) {
   const closeModal = () => {
     if(isFailModalVisible) {
       setFailModalVisible(false);
-    }
-    if(isSuccessModalVisible) {
-      setSuccessModalVisible(false);
-      navigation.navigate('Main');
     }
   };
 
@@ -104,17 +100,6 @@ function LoginScreen({ navigation }) {
         KB 스타후르츠뱅크가 처음이신가요?{' '}
         <Text style={styles.signUpLink} onPress={() => navigation.navigate('SignUp')}>회원가입</Text>
       </Text>
-
-      {/* 성공 모달 */}
-      {isSuccessModalVisible && (
-        <ReusableModal
-          isVisible={isSuccessModalVisible}
-          onClose={closeModal}
-          title="로그인 성공"
-          content="로그인에 성공하였습니다.<br/>홈으로 이동합니다."
-        />
-      )}
-      
 
       {/* 실패 모달 */}
       {isFailModalVisible && (

@@ -75,9 +75,9 @@ const HomeHeader = () => {
 
 
   // 2. 웹소켓 관련
-  const user = useSelector((state) => state.user.user);
-  const userId = useSelector((state) => state.user.user.userId);
-  const userName = useSelector((state) => state.user.user.userName);
+  const user = useSelector((state) => state.user?.user);
+  const userId = useSelector((state) => state.user.user?.userId);
+  const userName = useSelector((state) => state.user.user?.userName);
   const [userSessionId, setUserSessionId] = useState('');
   const [waitingQueue, setWaitingQueue] = useState([]); // 대기열 상태
   const [websocket, setWebsocket] = useState(null); // WebSocket 객체
