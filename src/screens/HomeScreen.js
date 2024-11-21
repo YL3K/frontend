@@ -18,6 +18,7 @@ function HomeScreen({ navigation }) {
   const accessToken = user?.accessToken;
 
   useEffect(()=> {
+    console.log(typeof userId);
     const fetchRecommendations = async () => {
       if (!userId) {
         console.log("User ID is undefined");
@@ -32,6 +33,9 @@ function HomeScreen({ navigation }) {
           },
         });
 
+        console.log(response.data);
+        
+
         setRecommendations(response.data); // API 데이터 설정
       } catch (err) {
         console.error("Failed to fetch recommendations:", err);
@@ -43,7 +47,7 @@ function HomeScreen({ navigation }) {
 
     const fetchRecentKeyword = async () => {
       if (!userId) {
-        console.error("User ID is undefined");
+        console.log("User ID is undefined");
         setIsLoadingRecentKeyword(false);
         return;
       }
@@ -72,7 +76,7 @@ function HomeScreen({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         {/* 헤더 */}
-        <TouchableOpacity  style={styles.header} onPress={() => navigation.navigate('Member', { screen: 'Mypage' })}>
+        <TouchableOpacity  style={styles.header} onPress={() => navigation.navigate('Mypage')}>
           <Text style={styles.userName}>{user?.userName}</Text>
           <Text style={styles.honorific}>님</Text>
         </TouchableOpacity >

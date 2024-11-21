@@ -10,7 +10,7 @@ function LogoHeader() {
   const title = route.name;
 
   // 특정 화면에서만 뒤로가기 버튼 숨기기
-  const hideBackButtonScreens = ['Home', 'Login', 'Counsel'];
+  const hideBackButtonScreens = ['Home', 'Login', 'Counsel', 'VideoConsult', 'EndSession', 'CounselorWaiting', 'CounselMain', 'CustomerMain'];
   const showBackButton = !hideBackButtonScreens.includes(title) && navigation.canGoBack();
   console.log(showBackButton);
   

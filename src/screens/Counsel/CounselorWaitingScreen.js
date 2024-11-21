@@ -183,9 +183,11 @@ function CounselorWaitingScreen({ navigation }) {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 20}}>
-                {counselorName} 상담사님
-            </Text>
+            <TouchableOpacity  style={styles.header} onPress={() => navigation.navigate('Mypage')}>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 20}}>
+                    {counselorName} 상담사님
+                </Text>
+            </TouchableOpacity>
         
             <View style={styles.containerBox} >
                 <Text>월별 상담 횟수</Text>
