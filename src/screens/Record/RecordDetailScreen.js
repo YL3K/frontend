@@ -442,7 +442,7 @@ const confirmDeleteSummary = async () => {
                       </TouchableOpacity>
                       {/* 삭제 버튼 */}
                       <TouchableOpacity
-                        style={styles.deleteButton}
+                        style={styles.deleteButton1}
                         onPress={() => handleDeleteMemo(memo.memoId)}
                       >
                         <Text style={styles.deleteButtonText}>삭제</Text>
@@ -513,11 +513,6 @@ const confirmDeleteSummary = async () => {
         onBtnText2="확인"
         onBtnAction2={confirmDeleteSummary} // 삭제 확인
       />
-  
-
-
-
-
       </ScrollView>
 
   );
@@ -526,7 +521,7 @@ const confirmDeleteSummary = async () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: 35,
     backgroundColor: "#fff",
   },
   loadingContainer: {
@@ -544,7 +539,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
-    padding: 16,
+    padding: 18,
     marginBottom: 16,
     backgroundColor: "#f9f9f9",
   },
@@ -564,6 +559,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     flex: 1,
+    marginBottom: 10
   },
   value: {
     fontSize: 16,
@@ -586,22 +582,23 @@ const styles = StyleSheet.create({
   },
   keywordButton: {
     margin: 4,
-    borderRadius: 12,
+    borderRadius: 100,
     backgroundColor: "#E6E6E6",
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
   memoContainer: {
-    backgroundColor: "#F9D776",
-    padding: 10,
-    marginTop: 8,
-    borderRadius: 8,
+    backgroundColor: 'rgba(255, 204, 0, 0.5)',
+    padding: 18,
+    marginTop: 5,
+    borderRadius: 10,
+    marginBottom: 10
   },
   memoInputBox: {
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
-    padding: 8,
+    padding: 18,
     marginBottom: 16,
     backgroundColor: "#f9f9f9",
     marginTop: 8,
@@ -620,6 +617,13 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderWidth: 1,
   },
+  deleteButton1: {
+    marginRight: 8, // 수정 버튼과 삭제 버튼 사이 간격
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: "#ff4d4f", // 배경색 흰색
+    borderRadius: 8
+  },
   modifyButtonText: {
     fontSize: 14,
     color: "#333", // 텍스트 색상
@@ -631,6 +635,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     backgroundColor: "#ff4d4f", // 빨간 배경색
     borderRadius: 8,
+    marginTop: 10,
+    marginBottom: 50
   },
   deleteButtonText: {
     fontSize: 14,
@@ -639,7 +645,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   textInput: {
- 
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
@@ -647,10 +652,10 @@ const styles = StyleSheet.create({
     borderColor: "#ddd", 
   },
   addButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     backgroundColor: "#F9D776", // 녹색 버튼
-    borderRadius: 20,
+    borderRadius: 10,
     alignItems: "center",
   },
   addButtonText: {
@@ -672,6 +677,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
+  memoDate: {
+    fontWeight: "bold",
+    marginBottom: 5
+  }
 });
 
 export default RecordDetailScreen;

@@ -2,6 +2,7 @@ import React, { useEffect, useState,useCallback } from 'react';
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector } from 'react-redux';
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -98,42 +99,58 @@ function RecordListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>상담 리스트</Text>
+      <Text style={styles.title}>검색 기간</Text>
 
-      {/* 날짜 선택 */}
-      <View style={styles.dateContainer}>
+      날짜 선택
+
+      <View>
+      <View style={styles.datePickerContainer}>
+        {/* 시작 날짜 선택 */}
         <TouchableOpacity
-          style={styles.dateBox}
+          style={styles.dateInputBox}
           onPress={() => setShowStartPicker(true)}
         >
-          <Text style={styles.dateText}>{startDate.toISOString().split('T')[0]}</Text>
+          <Icon name="calendar-today" size={18} color="#313131" style={styles.icon} />
+          <Text style={styles.dateText}>
+            {startDate ? startDate.toISOString().split("T")[0] : "YYYY. MM. DD"}
+          </Text>
         </TouchableOpacity>
+
+        {/* 종료 날짜 선택 */}
         <TouchableOpacity
-          style={styles.dateBox}
+          style={styles.dateInputBox}
           onPress={() => setShowEndPicker(true)}
         >
-          <Text style={styles.dateText}>{endDate.toISOString().split('T')[0]}</Text>
+          <Icon name="calendar-today" size={18} color="#313131" style={styles.icon} />
+          <Text style={styles.dateText}>
+            {endDate ? endDate.toISOString().split("T")[0] : "YYYY. MM. DD"}
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {showStartPicker && (
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          display="default"
-          onChange={onStartDateChange}
-          maximumDate={today}
-        />
-      )}
-      {showEndPicker && (
-        <DateTimePicker
-          value={endDate}
-          mode="date"
-          display="default"
-          onChange={onEndDateChange}
-          maximumDate={today}
-        />
-      )}
+        {/* 시작 날짜 피커 */}
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDate}
+            mode="date"
+            display="spinner"
+            onChange={onStartDateChange}
+            maximumDate={today}
+          />
+        )}
+
+        {/* 종료 날짜 피커 */}
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDate}
+            mode="date"
+            display="spinner"
+            onChange={onEndDateChange}
+            maximumDate={today}
+          />
+        )}
+      </View>
+
 
       {/* 고객명 검색 */}
       {userType === "counselor" && (
@@ -152,11 +169,16 @@ function RecordListScreen({ navigation }) {
         </View>
       )}
 
+      <View style={styles.separator} />
+
       {/* 상담 횟수와 키워드 통계 */}
       <View style={styles.statsContainer}>
         <View style={styles.statsBox}>
           <Text style={styles.statsLabel}>상담 횟수</Text>
-          <Text style={styles.statsValue}>{records.length}건</Text>
+          <View style={styles.statsValueContainer}>
+            <Text style={styles.statsValue}>{records.length}</Text>
+            <Text style={styles.statsUnit}> 건</Text>
+          </View>
         </View>
         {userType === "customer" ? (
           <View style={styles.statsBox}>
@@ -166,6 +188,8 @@ function RecordListScreen({ navigation }) {
                 styles.keywordValue,
                 !topKeyword && styles.keywordValueSmall, 
               ]}
+              numberOfLines={1} // 한 줄로 제한
+              ellipsizeMode="tail" // 말줄임표 위치를 tail(끝부분)로 설정
             >
               {topKeyword ? `#${topKeyword}` : "조회된 키워드가 없습니다"}
             </Text>
@@ -173,10 +197,12 @@ function RecordListScreen({ navigation }) {
         ) : (
           <View style={styles.statsBox}>
             <Text style={styles.statsLabel}>총 상담 횟수</Text>
-            <Text style={styles.keywordValue}>{totalCounselCount}건</Text>
+            <Text style={styles.keywordValue}>{totalCounselCount} 건</Text>
           </View>
         )}
       </View>
+
+      <View style={styles.separator} />
 
       {/* 상담 리스트 */}
       <FlatList
@@ -211,10 +237,17 @@ function RecordListScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 35,
     backgroundColor: "#fff",
     flex: 1,
   },
+  separator: {
+    width: '100%', 
+    height: 1,
+    backgroundColor: "#DCD9D9",
+    marginVertical: 19
+  },
+  
   title: {
     fontSize: 20,
     fontWeight: "bold",
@@ -223,7 +256,6 @@ const styles = StyleSheet.create({
   dateContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 16,
   },
   dateBox: {
     borderWidth: 1,
@@ -240,7 +272,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    marginTop: 16
   },
   searchInput: {
     flex: 1,
@@ -260,36 +292,49 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 16,
+    gap: 20
   },
   statsBox: {
     alignItems: "center",
-    padding: 10,
     backgroundColor: "#fff",
     borderRadius: 8,
     flex: 1,
-    marginHorizontal: 4,
     borderWidth: 1,
+    borderColor: '#7E7E7E',
+    padding: 10
   },
   statsLabel: {
     fontSize: 16,
-    color: "#555",
+    color: "#464646",
+    fontWeight: "bold",
+    marginBottom: 5
+  },
+  statsValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center', // 세로 중앙 정렬
   },
   statsValue: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "red",
+    color: "#FF5656",
+  },
+  statsUnit: {
+    fontSize: 16,
+    marginLeft: 4,
+    color: "#464646",
+    fontWeight: "bold"
   },
   keywordValue: {
-    fontSize: 32,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "blue",
+    color: "#FF5656",
+    marginTop: 5
   },
   recordItem: {
     padding: 16,
-    backgroundColor: "#F9D776",
-    borderRadius: 8,
-    marginBottom: 8,
+    backgroundColor: 'rgba(255, 204, 0, 0.5)',
+    borderRadius: 10,
+    marginBottom: 14.5,
   },
   recordDate: {
     fontSize: 14,
@@ -316,7 +361,33 @@ const styles = StyleSheet.create({
     paddingVertical : 6,
     fontSize: 13, // 작은 폰트 크기
     fontWeight: "normal",
-    color: "blue", // 기존 색상 유지
+    color: "#FF5656", // 기존 색상 유지
+  },
+  datePickerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 20
+  },
+  dateInputBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#CCCCCC",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#FFFFFF",
+    flex: 1, 
+    
+  },
+  dateText: {
+    fontSize: 16,
+    color: "#313131",
+    marginLeft: 10,
+  },
+  icon: {
+    marginRight: 5,
   },
 });
 
