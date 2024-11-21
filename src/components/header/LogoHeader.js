@@ -12,6 +12,7 @@ function LogoHeader() {
   // 특정 화면에서만 뒤로가기 버튼 숨기기
   const hideBackButtonScreens = ['Home', 'Login', 'Counsel'];
   const showBackButton = !hideBackButtonScreens.includes(title) && navigation.canGoBack();
+  console.log(showBackButton);
   
   return (
     <View style={styles.headerContainer}>
