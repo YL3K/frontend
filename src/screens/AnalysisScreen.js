@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import MonthPicker from 'react-native-month-year-picker';
 import axios from 'axios';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSelector } from 'react-redux';
 import AgePieChart from '../components/analysis/AgePieChart';
 import KeywordList from '../components/analysis/KeywordList';
@@ -39,14 +40,45 @@ function parseDuration(isoDuration) {
   return hours * 60 + minutes + seconds / 60;
 }
 
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 function AnalysisScreen() {
   const user = useSelector((state) => state.user.user);
   const accessToken = user?.accessToken;
 
   // 현재 날짜를 기준으로 초기 값 설정
   const today = new Date();
+  const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1));
   const initialEndYearMonth = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}`;
   const initialStartYearMonth = `${today.getFullYear() - 1}.${String(today.getMonth() + 1).padStart(2, '0')}`;
+  
+
+  // 나이 영역 날짜 초기 값 설정
+  const [startDateAge, setStartDateAge] = useState(oneMonthAgo);
+  const [endDateAge, setEndDateAge] = useState(today);
+  const [isStartPickerVisibleAge, setStartPickerVisibleAge] = useState(false);
+  const [isEndPickerVisibleAge, setEndPickerVisibleAge] = useState(false);
+  const [selectedAgeOption, setSelectedAgeOption] = useState('전체');
+
+  // 키워드 초기 값 설정
+  const [startDateKeyword, setStartDateKeyword] = useState(oneMonthAgo);
+  const [endDateKeyword, setEndDateKeyword] = useState(today);
+  const [isStartPickerVisibleKeyword, setStartPickerVisibleKeyword] = useState(false);
+  const [isEndPickerVisibleKeyword, setEndPickerVisibleKeyword] = useState(false);
+  const [selectedKeywordOption, setSelectedKeywordOption] = useState('전체');
+  const [isCloud, setCloud] = useState(false);
+
+  // 상담 요청 시간 초기 값 설정
+  const [startDateTime, setStartDateTime] = useState(oneMonthAgo);
+  const [endDateTime, setEndDateTime] = useState(today);
+  const [isStartPickerVisibleTime, setStartPickerVisibleTime] = useState(false);
+  const [isEndPickerVisibleTime, setEndPickerVisibleTime] = useState(false);
+  const [selectedTimeOption, setSelectedTimeOption] = useState('전체');
 
   //월별 평균상담시간 날짜 초기 값 설정
   const [startYearMonth, setStartYearMonth] = useState(initialStartYearMonth);
@@ -81,11 +113,21 @@ function AnalysisScreen() {
   const fetchAgeData = useCallback(async () => {
     setIsAgeLoading(true);
     try {
-      const response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/age', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
+      let response;
+      if (selectedAgeOption === '전체') {
+        response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/age', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+      } else if ( selectedAgeOption === '날짜') {
+        response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/age/range/${formatDate(startDateAge)}/${formatDate(endDateAge)}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+      }
+      
       const data = response.data;
 
       const total = Object.values(data).reduce((sum, value) => sum + value, 0) || 1;
@@ -105,17 +147,27 @@ function AnalysisScreen() {
     } finally {
       setIsAgeLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, selectedAgeOption, startDateAge, endDateAge]);
 
   //키워드 데이터 Fetch
   const fetchKeywordData = useCallback(async () => {
     setIsKeywordLoading(true);
     try {
-      const response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/keywords', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
+      let response;
+      if (selectedKeywordOption === '전체') {
+        response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/keywords', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+      } else if ( selectedKeywordOption === '날짜') {
+        response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/keywords/range/${formatDate(startDateKeyword)}/${formatDate(endDateKeyword)}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+      }
+      
       setKeywordData(response.data);
     } catch (error) {
       console.error("Error fetching keyword data:", error.message);
@@ -123,17 +175,27 @@ function AnalysisScreen() {
     } finally {
       setIsKeywordLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, selectedKeywordOption, startDateKeyword, endDateKeyword]);
 
   //상담 발생 시각 데이터 Fetch
   const fetchTimeData = useCallback(async () => {
     setIsTimeLoading(true);
     try {
-      const response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/time', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
+      let response;
+      if (selectedTimeOption === '전체') {
+        response = await axios.get('http://10.0.2.2:8080/api/v1/record/analysis/time', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+      } else if ( selectedTimeOption === '날짜') {
+        response = await axios.get(`http://10.0.2.2:8080/api/v1/record/analysis/time/range/${formatDate(startDateTime)}/${formatDate(endDateTime)}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+      }
+      
       const completeData = generateCompleteTimeData(response.data);
       setTimeData(completeData);
     } catch (error) {
@@ -142,7 +204,7 @@ function AnalysisScreen() {
     } finally {
       setIsTimeLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, selectedTimeOption, startDateTime, endDateTime]);
 
   //상담 평균 진행 시간 데이터 Fetch
   const fetchDurationData = useCallback(
@@ -189,13 +251,33 @@ function AnalysisScreen() {
     },[accessToken, startYearMonthCount, endYearMonthCount]
   );
 
+  // useEffect(() => {
+  //   fetchAgeData();
+  //   fetchKeywordData();
+  //   fetchTimeData();
+  //   fetchDurationData();
+  //   fetchCountData();
+  // }, [fetchAgeData, fetchKeywordData, fetchTimeData, fetchDurationData, fetchCountData]);
+
   useEffect(() => {
     fetchAgeData();
+  }, [fetchAgeData]);
+
+  useEffect(() => {
     fetchKeywordData();
+  }, [fetchKeywordData, isCloud]);
+
+  useEffect(() => {
     fetchTimeData();
+  }, [fetchTimeData]);
+
+  useEffect(() => {
     fetchDurationData();
+  }, [fetchDurationData]);
+
+  useEffect(() => {
     fetchCountData();
-  }, [fetchAgeData, fetchKeywordData, fetchTimeData, fetchDurationData, fetchCountData]);
+  }, [fetchCountData]);
 
   //상담 평균 시간 날짜 변경 핸들러
   const handleConfirmStart = (date) => {
@@ -234,44 +316,171 @@ function AnalysisScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* 고객 연령층 차트 */}
+      {/* 고객 연령층 Section */}
       <Text style={styles.title}>고객 연령층</Text>
       <View style={styles.chartContainer}>
+        <View style={styles.radioContainer}>
+          <TouchableOpacity 
+            style={styles.radioOption} 
+            onPress={() => setSelectedAgeOption('전체')}>
+            <Text style={[
+              styles.radioCircle, 
+              selectedAgeOption === '전체' && styles.selectedCircle
+            ]}>전체</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.radioOption} 
+            onPress={() => setSelectedAgeOption('날짜')}>
+            <Text style={[
+              styles.radioCircle, 
+              selectedAgeOption === '날짜' && styles.selectedCircle
+            ]}>날짜</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {selectedAgeOption === '날짜' && (
+          <View style={styles.dateContainer}>
+            {/* 시작 날짜 선택 */}
+            <TouchableOpacity style={styles.dateButton} onPress={() => setStartPickerVisibleAge(true)}>
+              <Text>시작: {formatDate(startDateAge)}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setEndPickerVisibleAge(true)}>
+              <Text>종료: {formatDate(endDateAge)}</Text>
+            </TouchableOpacity>
+
+            {isStartPickerVisibleAge && (
+              <DateTimePicker
+                value={startDateAge}
+                mode="date"
+                display="calendar"
+                onChange={(event, selectedDate) => {
+                  setStartPickerVisibleAge(false);
+                  if (selectedDate) setStartDateAge(selectedDate);
+                }}
+                maximumDate={endDateAge}
+              />
+            )}
+
+            {isEndPickerVisibleAge && (
+              <DateTimePicker
+                value={endDateAge}
+                mode="date"
+                display="calendar"
+                onChange={(event, selectedDate) => {
+                  setEndPickerVisibleAge(false);
+                  if (selectedDate) setEndDateAge(selectedDate);
+                }}
+                minimumDate={startDateAge}
+                maximumDate={new Date()}
+              />
+            )}
+          </View>
+        )}
+        {/* 고객 연령층 차트 */}
         {isAgeLoading ? (
-          <ActivityIndicator size="small" color="#007bff" />
+          <ActivityIndicator size="small" color="#007bff" style={{ marginVertical: 20 }} />
         ) : (
           ageData.length > 0 ? (
               <AgePieChart data={ageData} />
           ) : (
-            <Text>데이터가 없습니다.</Text>
+            <Text style={{ textAlign: 'center' }}>데이터가 없습니다.</Text>
           )
         )}
       </View>
+      
 
-      {/* 키워드 빈도 차트 */}
+      {/* 키워드 빈도 Section */}
       <Text style={styles.title}>키워드 빈도</Text>
-      <View style={styles.chartContainer}>
-        {isKeywordLoading ? (
-          <ActivityIndicator size="small" color="#007bff" />
-        ) : (
-          keywordData.length > 0 ? (
-              <KeywordCloud words={keywordData} />
-          ) : (
-            <Text>데이터가 없습니다.</Text>
-          )
-        )}
+      <View style={styles.chartStyle}>
+        <TouchableOpacity
+          style={styles.chartStyleButton}
+          onPress={()=>setCloud(false)}>
+          <Text
+            style={[
+              styles.styleButton,
+              !isCloud && styles.selectStyleButton
+            ]}>랭킹</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.chartStyleButton}
+          onPress={()=>setCloud(true)}>
+          <Text
+            style={[
+              styles.styleButton,
+              isCloud && styles.selectStyleButton
+            ]}>단어</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* 키워드 랭킹 차트 */}
-      <Text style={styles.title}>키워드 랭킹</Text>
       <View style={styles.chartContainer}>
+        <View style={styles.radioContainer}>
+          <TouchableOpacity
+            style={styles.radioOption}
+            onPress={()=>setSelectedKeywordOption('전체')}>
+            <Text style={[
+              styles.radioCircle,
+              selectedKeywordOption === '전체' && styles.selectedCircle
+            ]}>전체</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.radioOption}
+            onPress={() => setSelectedKeywordOption('날짜')}>
+            <Text style={[
+              styles.radioCircle,
+              selectedKeywordOption === '날짜' && styles.selectedCircle
+            ]}>날짜</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {selectedKeywordOption === '날짜' && (
+          <View style={styles.dateContainer}>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setStartPickerVisibleKeyword(true)}>
+              <Text>시작: {formatDate(startDateKeyword)}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setEndPickerVisibleKeyword(true)}>
+              <Text>종류: {formatDate(endDateKeyword)}</Text>
+            </TouchableOpacity>
+
+            {isStartPickerVisibleKeyword && (
+              <DateTimePicker
+                value={startDateKeyword}
+                mode="date"
+                display="calendar"
+                onChange={(event, selectedDate)=>{
+                  setStartPickerVisibleKeyword(false);
+                  if(selectedDate) setStartDateKeyword(selectedDate);
+                }}
+                maximumDate={endDateAge}
+              />
+            )}
+
+            {isEndPickerVisibleKeyword && (
+              <DateTimePicker
+                value={endDateKeyword}
+                mode="date"
+                display="calendar"
+                onChange={(event, selectedDate)=>{
+                  setEndPickerVisibleKeyword(false);
+                  if(selectedDate) setEndDateKeyword(selectedDate);
+                }}
+                minimumDate={startDateKeyword}
+                maximumDate={new Date()}
+              />
+            )}
+          </View>
+        )}
+        {/* 고객 키워드 차트 */}
         {isKeywordLoading ? (
-          <ActivityIndicator size="small" color="#007bff" />
+          <ActivityIndicator size="small" color="#007bff" style={{ marginVertical: 20 }}/>
         ) : (
           keywordData.length > 0 ? (
+            isCloud ? (
+              <KeywordCloud key={isCloud} words={keywordData} />
+            ) : (
               <KeywordList data={keywordData} />
+            )
           ) : (
-            <Text>데이터가 없습니다.</Text>
+            <Text style={{ textAlign: 'center' }}>데이터가 없습니다.</Text>
           )
         )}
       </View>
@@ -279,13 +488,70 @@ function AnalysisScreen() {
       {/* 상담 발생 시각 차트 */}
       <Text style={styles.title}>상담 발생 시각</Text>
       <View style={styles.chartContainer}>
+        <View style={styles.radioContainer}>
+          <TouchableOpacity
+            style={styles.radioOption}
+            onPress={() => setSelectedTimeOption('전체')}>
+            <Text style={[
+              styles.radioCircle,
+              selectedTimeOption === '전체' && styles.selectedCircle
+            ]}>전체</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.radioOption}
+            onPress={() => setSelectedTimeOption('날짜')}>
+            <Text style={[
+              styles.radioCircle,
+              selectedTimeOption === '날짜' && styles.selectedCircle
+            ]}>날짜</Text>
+          </TouchableOpacity>
+        </View>
+
+        {selectedTimeOption === '날짜' && (
+          <View style={styles.dateContainer}>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setStartPickerVisibleTime(true)}>
+              <Text>시작: {formatDate(startDateTime)}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setEndPickerVisibleTime(true)}>
+              <Text>종료: {formatDate(endDateTime)}</Text>
+            </TouchableOpacity>
+
+            {isStartPickerVisibleTime && (
+              <DateTimePicker
+                value={startDateTime}
+                mode="date"
+                display="calendar"
+                onChange={(event, selectedDate) => {
+                  setStartPickerVisibleTime(false);
+                  if (selectedDate) setStartDateTime(selectedDate);
+                }}
+                maximumDate={endDateTime}
+                />
+            )}
+
+            {isEndPickerVisibleTime && (
+              <DateTimePicker
+                value={endDateTime}
+                mode="date"
+                display="calendar"
+                onChange={(event, selectedDate)=> {
+                  setEndPickerVisibleTime(false);
+                  if (selectedDate) setEndDateTime(selectedDate);
+                }}
+                minimumDate={startDateTime}
+                maximumDate={new Date()}
+              />
+            )}
+          </View>
+        )}
+        {/* 상담 요청 시각 차트 */}
         {isTimeLoading ? (
-          <ActivityIndicator size="small" color="#007bff" />
+          <ActivityIndicator size="small" color="#007bff" style={{ marginVertical: 20 }}/>
         ) : (
           Object.keys(timeData).length > 0 ? (
               <ClockChart data={timeData} />
           ) : (
-            <Text>데이터가 없습니다.</Text>
+            <Text style={{ textAlign: 'center' }}>데이터가 없습니다.</Text>
           )
         )}
       </View>
@@ -302,12 +568,12 @@ function AnalysisScreen() {
       </View>
       <View style={styles.chartContainer}>
         {isDurationLoading ? (
-          <ActivityIndicator size="small" color="#007bff" />
+          <ActivityIndicator size="small" color="#007bff" style={{ marginVertical: 20 }}/>
         ) : (
           durationData.length > 0 ? (
               <DurationChart data={durationData} />
           ) : (
-            <Text>데이터가 없습니다.</Text>
+            <Text style={{ textAlign: 'center' }}>데이터가 없습니다.</Text>
           )
         )}
       </View>
@@ -348,12 +614,12 @@ function AnalysisScreen() {
       </View>
       <View style={styles.chartContainer}>
         {isCountLoading ? (
-          <ActivityIndicator size="small" color="#007bff" />
+          <ActivityIndicator size="small" color="#007bff" style={{ marginVertical: 20 }}/>
         ) : (
           countData.length > 0 ? (
               <CountChart data={countData} />
           ) : (
-            <Text>데이터가 없습니다.</Text>
+            <Text style={{ textAlign: 'center' }}>데이터가 없습니다.</Text>
           )
         )}
       </View>
@@ -383,7 +649,6 @@ function AnalysisScreen() {
           mode="monthYear"
         />
       )}
-
     </ScrollView>
   );
 }
@@ -412,20 +677,74 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 15,
   },
+  radioContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    width: '100%',
+    marginBottom: 10,
+  },
+  radioOption: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  radioCircle: {
+    borderRadius: 8,
+    backgroundColor: '#CED4DA',
+    textAlign: 'center',
+    fontWeight: '800',
+    height: 40,
+    textAlignVertical: 'center',
+  },
+  selectedCircle: {
+    borderRadius: 8,
+    backgroundColor: '#FFCC00',
+    textAlign: 'center',
+    fontWeight: '800',
+    height: 40,
+    textAlignVertical: 'center',
+  },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginVertical: 10,
   },
   dateButton: {
     borderRadius: 8,
     padding: 10,
     flex: 1,
-    marginRight: 5,
+    marginHorizontal: 5,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'gray',
+  },
+  chartStyle: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  chartStyleButton: {
+    marginHorizontal: 5,
+    marginBottom: 10,
+    width: 50,
+  },
+  styleButton: {
+    borderRadius: 10,
+    backgroundColor: '#CED4DA',
+    textAlign: 'center',
+    fontWeight: '600',
+    height: 25,
+    textAlignVertical: 'center',
+    fontSize: 12,
+  },
+  selectStyleButton: {
+    borderRadius: 10,
+    backgroundColor: '#FFCC00',
+    textAlign: 'center',
+    fontWeight: '600',
+    height: 25,
+    textAlignVertical: 'center',
+    fontSize: 12,
   },
   searchButton: {
     backgroundColor: '#007bff',
