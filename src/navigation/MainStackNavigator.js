@@ -9,6 +9,7 @@ import CounterScreen from '../screens/CounterScreen';
 import AnalysisScreen from '../screens/AnalysisScreen';
 import LogoHeader from '../components/header/LogoHeader';
 import { useSelector, useDispatch } from 'react-redux';
+import CounselorWaitingScreen from '../screens/Counsel/CounselorWaitingScreen';
 
 const Stack = createStackNavigator();
 

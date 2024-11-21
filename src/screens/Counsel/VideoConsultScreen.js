@@ -3,6 +3,8 @@ import { View, TouchableOpacity, StyleSheet, PermissionsAndroid, Animated } from
 import { useSelector } from 'react-redux';
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, mediaDevices, RTCView } from 'react-native-webrtc';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 const VideoConsultScreen = () => {
   const wsRef = useRef(null);
@@ -12,15 +14,34 @@ const VideoConsultScreen = () => {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const userInform = useSelector((state) => state.user).user;
+
   const [expanded, setExpanded] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const animation = useRef(new Animated.Value(0)).current;
+  const navigation = useNavigation();
 
   const userName = userInform.userName;
-  const customerId = "123";
+  const customerId = "5";
   const counselorId = "8";
   const userType = userInform.userType;
+
+  const createRoom = async () => {
+    try {
+      await axios.post('http://10.0.2.2:8080/api/v1/counsel',
+        {
+          customerId,
+          counselorId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${userInform.accessToken}`  
+          },
+        }); 
+    } catch (error) {
+      console.error('Error creating room:', error);
+    }
+  };
 
   const getMedia = async () => {
     try {
@@ -102,8 +123,7 @@ const VideoConsultScreen = () => {
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" }, 
         {
-          // 턴서버 바뀔때마다 해줘야해서 고정법 찾아보기
-          urls: 'turn:192.168.0.204:3478', 
+          urls: 'turn:172.30.1.70:3478', 
           username: 'yl3k',
           credential: 'yl3k',
         }
@@ -142,9 +162,9 @@ const VideoConsultScreen = () => {
     console.log(userType + "&&& RTC 생성 및 이벤트들 등록");
   };
 
+  // A만 수행
   const createOffer = async () => {
     try {
-      console.log(userType, "###### 앤써 만듦")
       const offer = await pcRef.current.createOffer();
       await pcRef.current.setLocalDescription(offer);
       wsRef.current.send(
@@ -155,11 +175,17 @@ const VideoConsultScreen = () => {
           sdp: offer,
         })
       );
+      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/start/${customerId+"_"+counselorId}`,{}, {
+        headers: {
+          Authorization: `Bearer ${userInform.accessToken}`  
+        }
+      }); 
     } catch (e) {
       console.error("Error creating offer:", e);
     }
   };
 
+  // B만 수행
   const handleOffer = async (message) => {
     console.log(userType, "오퍼 받음#######3 앤서 날림", message)
     try {
@@ -182,6 +208,7 @@ const VideoConsultScreen = () => {
     }
   };
 
+  // A만 수행
   const handleAnswer = async (sdp) => {
     console.log(userType, "######33앤써 받음")
     try {
@@ -217,6 +244,18 @@ const VideoConsultScreen = () => {
     }
   };
 
+  const endSession = async () => {
+    try {
+      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/end/${customerId+"_"+counselorId}`,{}, {
+        headers: {
+          Authorization: `Bearer ${userInform.accessToken}`  
+        }
+      }); 
+    } catch (error) {
+      console.error('Error closing session:', error);
+    }
+  };
+
   const toggleMenu = () => {
     setExpanded(!expanded);
     Animated.timing(animation, {
@@ -236,7 +275,28 @@ const VideoConsultScreen = () => {
     outputRange: [0, 1],
   });
 
+  const toggleAudio = () => {
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !isAudioEnabled; 
+        setIsAudioEnabled(audioTrack.enabled); 
+      }
+    }
+  };
+
+  const toggleVideo = () => {
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !isVideoEnabled; 
+        setIsVideoEnabled(videoTrack.enabled); 
+      }
+    }
+  };
+
   useEffect(() => {
+    createRoom()
     setupWebSocket();
     createPeerConnection();
     getMedia();
@@ -251,6 +311,10 @@ const VideoConsultScreen = () => {
       if (wsRef.current) {
         wsRef.current.close();
       }
+
+      endSession();
+      // 완료 페이지로 이동..?
+      navigation.navigate('EndSession'); 
     };
   }, []);
 
@@ -273,7 +337,7 @@ const VideoConsultScreen = () => {
 
           <TouchableOpacity
             style={styles.circleButton}
-            onPress={() => setIsAudioEnabled((prev) => !prev)}
+            onPress={toggleAudio}
           >
             <Icon
               name={isAudioEnabled ? 'microphone' : 'microphone-off'}
@@ -284,7 +348,7 @@ const VideoConsultScreen = () => {
 
           <TouchableOpacity
             style={styles.circleButton}
-            onPress={() => setIsVideoEnabled((prev) => !prev)}
+            onPress={toggleVideo}
           >
             <Icon
               name={isVideoEnabled ? 'camera' : 'camera-off'}
@@ -303,7 +367,7 @@ const VideoConsultScreen = () => {
         <RTCView
           streamURL={localStream.toURL()}
           style={styles.localVideo}
-          objectFit="cover"
+          objectFit="contain"
         />
       ) : (
         <View style={{backgroundColor:"blue"}}></View>
@@ -313,7 +377,7 @@ const VideoConsultScreen = () => {
         <RTCView
           streamURL={remoteStream.toURL()}
           style={styles.remoteVideo}
-          objectFit="cover"
+          objectFit="contain"
         />
       ) : (
         <View style={{backgroundColor:"blue"}}></View>
@@ -326,8 +390,8 @@ const VideoConsultScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#f0f0f0',
   },
   btnscontainer: {
@@ -336,11 +400,13 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#FFDD00', 
     borderRadius: 10,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
     flexDirection: 'row',
     alignItems: 'center',
     height: 60,
     overflow: 'hidden', 
-    zIndex: 10
+    zIndex: 1099
   },
   toggleButton: {
     justifyContent: 'center',
@@ -364,19 +430,21 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   localVideo: {
-    width: "30%",
-    height: "30%",
-    position: "absolute",
-    top: 10,
-    left: 10,
-    zIndex: 10,
+    position: 'absolute', 
+    top: 10, 
+    left: 10, 
+    width: '30%',
+    height: '30%', 
+    zIndex: -99, 
+    borderWidth:10,
+    bolderColor:"red"
   },
   remoteVideo: {
-    width:"100%",
-    height:"100%",
-    flex: 1,
-    zIndex: -1,
-  },
+    position: 'absolute', 
+    width: '100%', 
+    height: '100%', 
+    zIndex: 99, 
+  }
 });
 
 export default VideoConsultScreen;

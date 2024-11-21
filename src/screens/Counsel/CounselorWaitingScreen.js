@@ -4,8 +4,11 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import checked from '../../../assets/check.png'
 import unchecked from '../../../assets/uncheck.png'
+import { useSelector } from 'react-redux';
+import axios from 'axios';
 
 function CounselorWaitingScreen({ navigation }) {
+    const user = useSelector((state) => state.user.user);
     const counselorName = '이국민';
     const [year, setYear] = useState(null);
     const [month, setMonth] = useState(null);
@@ -76,6 +79,30 @@ function CounselorWaitingScreen({ navigation }) {
         // 상담 수 갱신
     };
 
+    const handleCustomerAssign = async () => {
+        await customerAssignAPI();
+        navigation.navigate('VideoConsult')
+    }
+    
+    const customerAssignAPI = async () => {
+        try {
+          const response = await axios.post('http://10.0.2.2:8080/api/v1/counsel/queue/assign', {}, {
+            headers: {
+              Authorization: `Bearer ${user.accessToken}`  // 토큰을 Authorization 헤더에 넣기
+            }
+        });
+    
+          console.log(response.data);
+          setIsCounselingStarted(true); // 상담 시작 상태로 변경
+          setModalVisible(false); // 상담 시작 후 모달 닫기
+          setWaitingModalVisible(true);
+    
+        } catch (error) {
+          console.error(error);
+        }  
+    };
+      
+
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 20}}>
@@ -116,7 +143,7 @@ function CounselorWaitingScreen({ navigation }) {
                 styles.startButton,
                 {backgroundColor : isStartButtonEnabled ? '#ffd700' : '#d3d3d3'},
                 ]}
-                onPress={() => navigation.navigate('VideoConsult')}
+                onPress={handleCustomerAssign}
                 disabled={!isStartButtonEnabled}
             >
                 <Text style={{fontSize: 18, fontWeight: 'bold'}}>화상 상담 시작</Text>

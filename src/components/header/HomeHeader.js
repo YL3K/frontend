@@ -32,7 +32,7 @@ const HomeHeader = () => {
   const handleStartCounseling = async () => {
     await handleAddCustomer();
     console.log("상담 시작");
-    // navigation.navigate('Counsel', {screen:'CounselorWaitingScreen'});
+    navigation.navigate('Counsel', {screen:'CounselorWaitingScreen'});
   };
 
   // 상담 취소 버튼 클릭 시 처리
@@ -106,9 +106,10 @@ const HomeHeader = () => {
         setWaitingQueue(queueArray); // 대기열 상태를 화면에 업데이트
       }
       if (message.type === 'queue_assign') {
+        // 여기서 받아올때
         // 모든 변수 초기화
         setWaitingModalVisible(false);
-        
+        console.log(message.counselorId) 
         // 이동 모달 띄우기
         // 예 누르면 navigation.navigate('Counsel', {screen:'VideoConsult'});
         // 아니오 누르면 새로운 알람 뜨면서 상담이 취소되었습니다.
