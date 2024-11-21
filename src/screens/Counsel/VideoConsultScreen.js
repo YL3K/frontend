@@ -11,19 +11,19 @@ const VideoConsultScreen = () => {
   const pcRef = useRef(null);
   const localStreamRef = useRef(null);
   const candidateQueue = useRef([]); 
+  const [remoteVideoEnabled, setRemoteVideoEnabled] = useState(true);
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isConnected, setIsConnected] = useState(false); 
   const animation = useRef(new Animated.Value(0)).current;
-  const navigation = useNavigation();
   const userInform = useSelector((state) => state.user.user);
-
-  const userName = userInform.userName;
+  const navigation = useNavigation();
+  const roomId = useRef(null);
   const { customerId, counselorId } = useSelector((state) => state.counsel);
-  let roomId;
-  const userType = userInform.userType;
+  const userType = userInform.userType
 
   const createRoom = async () => {
     try {
@@ -37,7 +37,7 @@ const VideoConsultScreen = () => {
             Authorization: `Bearer ${userInform.accessToken}`  
           },
         }); 
-      roomId = response.data.response.data
+      roomId.current = response.data.response.data; 
     } catch (error) {
       console.error('Error creating room:', error);
     }
@@ -45,6 +45,7 @@ const VideoConsultScreen = () => {
 
   const getMedia = async () => {
     try {
+      console.log("미디어 가져오기")
       const granted = await PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.CAMERA,
         PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
@@ -74,6 +75,7 @@ const VideoConsultScreen = () => {
   };
 
   const setupWebSocket = () => {
+    console.log("웹소켓셋팅")
     wsRef.current = new WebSocket("ws://10.0.2.2:8080/ws");
 
     wsRef.current.onopen = () => {
@@ -93,13 +95,20 @@ const VideoConsultScreen = () => {
           createOffer();
           break;
         case "offer":
-          await handleOffer(data.sdp);
+          await handleOffer(data);
           break;
         case "answer":
           await handleAnswer(data.sdp);
           break;
         case "candidate":
           await handleCandidate(data.candidate);
+          break;
+        case "video_toggle":
+          setRemoteVideoEnabled(data.videoEnabled);
+          break;
+        case "end_call":
+          console.log("종료하시라구요!", userType)
+          navigation.navigate('EndSession');
           break;
         default:
           break;
@@ -153,16 +162,18 @@ const VideoConsultScreen = () => {
   const createOffer = async () => {
     try {
       const offer = await pcRef.current.createOffer();
+      console.log("A가 오퍼 만듦", roomId.current)
       await pcRef.current.setLocalDescription(offer);
       wsRef.current.send(
         JSON.stringify({
           type: "offer",
           customerId: customerId,
           counselorId: counselorId,
+          roomId: roomId.current,
           sdp: offer,
         })
       );
-      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/start/${roomId}`,{}, {
+      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/start/${roomId.current}`,{}, {
         headers: {
           Authorization: `Bearer ${userInform.accessToken}`  
         }
@@ -176,8 +187,10 @@ const VideoConsultScreen = () => {
   const handleOffer = async (message) => {
     try {
       await pcRef.current.setRemoteDescription(
-        new RTCSessionDescription({ type: "offer", sdp: message.sdp })
+        new RTCSessionDescription({ type: "offer", sdp: message.sdp.sdp })
       );
+      console.log("룸아이디>>>>",message.roomId)
+      roomId.current = message.roomId;
       const answer = await pcRef.current.createAnswer();
       await pcRef.current.setLocalDescription(answer);
       wsRef.current.send(
@@ -188,7 +201,8 @@ const VideoConsultScreen = () => {
           sdp: answer.sdp,
         })
       );
-      processCandidateQueue(); // Remote Description 설정 후 Candidate 큐 처리
+      processCandidateQueue();
+      setIsConnected(true);
     } catch (e) {
       console.error("Error handling offer:", e);
     }
@@ -200,7 +214,8 @@ const VideoConsultScreen = () => {
       await pcRef.current.setRemoteDescription(
         new RTCSessionDescription({ type: "answer", sdp: sdp })
       );
-      processCandidateQueue(); // Remote Description 설정 후 Candidate 큐 처리
+      processCandidateQueue();
+      setIsConnected(true);
     } catch (e) {
       console.error("Error handling answer:", e);
     }
@@ -231,11 +246,20 @@ const VideoConsultScreen = () => {
 
   const endSession = async () => {
     try {
-      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/end/${roomId}`,{}, {
+      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/close/${roomId.current}`,{}, {
         headers: {
           Authorization: `Bearer ${userInform.accessToken}`  
         }
       }); 
+      wsRef.current.send(
+        JSON.stringify({
+          type: "end_call",
+          customerId: customerId,
+          counselorId: counselorId,
+          roomId: roomId.current,
+        })
+      );
+      navigation.navigate('EndSession');
     } catch (error) {
       console.error('Error closing session:', error);
     }
@@ -276,15 +300,30 @@ const VideoConsultScreen = () => {
       if (videoTrack) {
         videoTrack.enabled = !isVideoEnabled; 
         setIsVideoEnabled(videoTrack.enabled); 
+
+        wsRef.current.send(
+          JSON.stringify({
+            type: "video_toggle",
+            customerId: customerId,
+            counselorId: counselorId,
+            videoEnabled: videoTrack.enabled,
+          })
+        );
       }
     }
   };
 
   useEffect(() => {
-    createRoom()
-    setupWebSocket();
-    createPeerConnection();
-    getMedia();
+    const initialize = async () => {
+      if (userType === 'counselor') {
+        await createRoom(); 
+      }
+      setupWebSocket(); 
+      createPeerConnection(); 
+      getMedia(); 
+    };
+
+    initialize();
 
     return () => {
       if (localStreamRef.current) {
@@ -296,10 +335,6 @@ const VideoConsultScreen = () => {
       if (wsRef.current) {
         wsRef.current.close();
       }
-
-      endSession();
-      // 완료 페이지로 이동..?
-      navigation.navigate('EndSession'); 
     };
   }, []);
 
@@ -342,31 +377,43 @@ const VideoConsultScreen = () => {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.circleButton}>
+          <TouchableOpacity style={styles.circleButton} onPress={endSession}>
             <Icon name="phone-off" size={24} color="red" />
           </TouchableOpacity>
         </Animated.View>
       </Animated.View>
       
-      {localStream ? (
-        <RTCView 
-          style={styles.localVideo}
-          streamURL={localStream.toURL()}
-          objectFit="cover"
-        />
-      ) : (
-        <View style={styles.localVideo}></View>
-      )}
-      
-      {remoteStream ? (
-        <RTCView 
-          streamURL={remoteStream.toURL()}
-          style={styles.remoteVideo}
-          objectFit="cover"
-        />
-      ) : (
-        <View style={styles.remoteVideo}></View>
-      )}
+      {isConnected ? (
+        isVideoEnabled && localStream ? (
+          <RTCView
+            streamURL={localStream.toURL()}
+            style={styles.localVideo}
+            objectFit="cover"
+          />
+        ) : (
+          <View style={styles.localVideoOffPlaceholder}>
+            <Icon name="camera-off" size={40} color="white" />
+            <View style={styles.overlayText}>
+            </View>
+          </View>
+        )
+      ) : null}
+      {isConnected ? (
+        remoteVideoEnabled && remoteStream ? (
+          <RTCView
+            streamURL={remoteStream.toURL()}
+            style={styles.remoteVideo}
+            objectFit="cover"
+          />
+        ) : (
+          <View style={styles.remoteVideoOffPlaceholder}>
+            <Icon name="camera-off" size={40} color="white" />
+            <View style={styles.overlayText}>
+            </View>
+          </View>
+        )
+      ) : null}
+
     </View>
   );
 };
@@ -374,8 +421,8 @@ const VideoConsultScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
     backgroundColor: '#f0f0f0',
   },
   btnscontainer: {
@@ -384,13 +431,14 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#FFDD00',
     borderRadius: 10,
+    borderBottomRightRadius:0,
     borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
     flexDirection: 'row',
     alignItems: 'center',
     height: 60,
-    overflow: 'hidden', 
-    zIndex: 1099
+    width: 30,
+    overflow: 'hidden',
+    zIndex: 102,
   },
   toggleButton: {
     justifyContent: 'center',
@@ -414,12 +462,36 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   localVideo: {
-    width: "100%",
-    flex: 4,
+    width: "30%",
+    height: "30%",
+    position: "absolute",
+    zIndex: 1,
+    top: 10,
+    left: 10,
   },
   remoteVideo: {
     width: "100%",
-    flex: 6,
+    height: "100%",
+    top: 0,
+    left: 0
+  },
+  localVideoOffPlaceholder: {
+    width: "30%",
+    height: "30%",
+    position: "absolute",
+    backgroundColor: "black",
+    zIndex: 1,
+    top: 10,
+    left: 10,
+    justifyContent: "center", 
+    alignItems: "center",   
+  },
+  remoteVideoOffPlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "black",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
