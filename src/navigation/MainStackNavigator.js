@@ -8,8 +8,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import CounterScreen from '../screens/CounterScreen';
 import AnalysisScreen from '../screens/AnalysisScreen';
 import LogoHeader from '../components/header/LogoHeader';
-import { useSelector, useDispatch } from 'react-redux';
-import CounselorWaitingScreen from '../screens/Counsel/CounselorWaitingScreen';
+import { useSelector } from 'react-redux';
 
 const Stack = createStackNavigator();
 
@@ -21,10 +20,10 @@ function MainStackNavigator() {
     <Stack.Navigator
       initialRouteName={isLoggedIn ? "Main" : "Member"}
       screenOptions={{
-        header: () => <LogoHeader />,  // 기본 상단 헤더를 LogoHeader로 설정
+        header: (props) => <LogoHeader {...props} />,
       }}
     >
-      <Stack.Screen name="Member" component={MemberNavigator} />
+      <Stack.Screen name="Member" component={MemberNavigator} options={{headerShown: false}}/>
       <Stack.Screen name="Main" component={MainTabNavigator} options={{headerShown: false}}/>
       <Stack.Screen name="Counsel" component={CounselNavigator} />
       <Stack.Screen name="Record" component={RecordNavigator} />

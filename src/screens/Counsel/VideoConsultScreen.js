@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 20,
     right: 0,
-    backgroundColor: '#FFDD00', 
+    backgroundColor: '#FFDD00',
     borderRadius: 10,
     borderTopRightRadius: 0,
     borderBottomRightRadius: 0,
@@ -430,21 +430,23 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   localVideo: {
-    position: 'absolute', 
-    top: 10, 
-    left: 10, 
-    width: '30%',
-    height: '30%', 
-    zIndex: -99, 
-    borderWidth:10,
-    bolderColor:"red"
+    width: "30%",
+    height: "30%",
+    position: "absolute",
+    top: 10,
+    left: 10,
+    zIndex: 103,
+    elevation: 1,
   },
   remoteVideo: {
-    position: 'absolute', 
-    width: '100%', 
-    height: '100%', 
-    zIndex: 99, 
-  }
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    top: 0,
+    left: 0,
+    zIndex: 999,
+    elevation: 0,
+  },
 });
 
 export default VideoConsultScreen;

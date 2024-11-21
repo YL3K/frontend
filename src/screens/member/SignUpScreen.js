@@ -4,6 +4,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
+import { ScrollView } from 'react-native-gesture-handler';
 
 function SignUpScreen({ navigation }) {
   const [loginId, setLoginId] = useState('');
@@ -120,7 +121,7 @@ function SignUpScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>회원가입</Text>
       <Text style={styles.subtitle}>고객님의 정보를 입력해주세요.</Text>
       
@@ -202,7 +203,7 @@ function SignUpScreen({ navigation }) {
             style={styles.input}
             placeholder="생년월일을 선택해주세요"
             value={birthDate?.toLocaleDateString()} // 날짜를 문자열로 변환하여 표시
-            editable={false} // 텍스트 필드가 수정되지 않도록 설정
+            editable={false}
           />
         </View>
       </TouchableOpacity>
@@ -224,7 +225,7 @@ function SignUpScreen({ navigation }) {
       <TouchableOpacity style={styles.button} onPress={confirmNullCheck}>
         <Text style={styles.buttonText}>계속하기</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -232,8 +233,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 35,
-    backgroundColor: '#fff',
-    justifyContent: 'flex-start',
+    backgroundColor: '#fff'
   },
   logo: {
     fontSize: 20,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     marginBottom: 15
   },
   checkButton: {
-    backgroundColor: '#D9D9D9',
+    backgroundColor: '#FFCC00',
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 20,

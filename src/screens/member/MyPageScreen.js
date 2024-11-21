@@ -14,11 +14,16 @@ function MyPageScreen({ navigation }) {
 
   const closeModal = () => {
     // setModalVisible(false);
-    navigation.navigate('Login');
+    // navigation.navigate('Login');
+    dispatch(logoutUser()); // 로그아웃 시 Redux 상태 초기화
+    navigation.reset({
+      index: 0, // 첫 번째 화면으로 설정
+      routes: [{ name: 'Member', params: { screen: 'Login' } }], // 'Member'의 'Login' 화면으로 이동
+    });
   };
 
   const handleLogout = () => {
-    dispatch(logoutUser()); // 로그아웃 시 Redux 상태 초기화
+    
     setModalVisible(true)
   };
 
@@ -29,7 +34,6 @@ function MyPageScreen({ navigation }) {
         <View style={styles.profileContainer}>
         <Icon name="account-circle" size={100} color="#DCD9D9" style={styles.profileIcon} />
         <Text style={styles.nameText}>{user.userName}<Text style={styles.addText}>님</Text></Text>
-        <Text>UserId : {user.userId}</Text>
         <TouchableOpacity style={styles.editButton}>
           <Text style={styles.editButtonText}>내 정보 수정</Text>
         </TouchableOpacity>
@@ -40,7 +44,8 @@ function MyPageScreen({ navigation }) {
 
       {/* 메뉴 섹션 */}
       <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem}
+        onPress={() => navigation.navigate('Record',{screen:'RecordListScreen' })}>
           <Icon name="history" size={24} color="#000" />
           <Text style={styles.menuText}>상담 내역</Text>
         </TouchableOpacity>

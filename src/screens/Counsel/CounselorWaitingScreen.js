@@ -92,11 +92,6 @@ function CounselorWaitingScreen({ navigation }) {
             }
         });
     
-          console.log(response.data);
-          setIsCounselingStarted(true); // 상담 시작 상태로 변경
-          setModalVisible(false); // 상담 시작 후 모달 닫기
-          setWaitingModalVisible(true);
-    
         } catch (error) {
           console.error(error);
         }  
