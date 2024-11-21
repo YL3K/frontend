@@ -103,7 +103,7 @@ const VideoConsultScreen = () => {
         { urls: "stun:stun.l.google.com:19302" }, 
         {
           // 턴서버 바뀔때마다 해줘야해서 고정법 찾아보기
-          urls: 'turn:192.168.0.204:3478', 
+          urls: 'turn:172.28.160.131:3478', 
           username: 'yl3k',
           credential: 'yl3k',
         }
@@ -325,7 +325,7 @@ const VideoConsultScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    // flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
     backgroundColor: '#f0f0f0',
@@ -334,13 +334,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 20,
     right: 0,
-    backgroundColor: '#FFDD00', 
+    backgroundColor: '#FFDD00',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     height: 60,
-    overflow: 'hidden', 
-    zIndex: 10
+    width: 30,
+    overflow: 'hidden',
+    zIndex: 102,
+    // maxWidth: '30'
   },
   toggleButton: {
     justifyContent: 'center',
@@ -364,18 +366,22 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   localVideo: {
-    width: "30%",
-    height: "30%",
+    width: "130px",
+    height: "130px",
     position: "absolute",
     top: 10,
     left: 10,
-    zIndex: 10,
+    zIndex: 103,
+    elevation: 1,
   },
   remoteVideo: {
-    width:"100%",
-    height:"100%",
-    flex: 1,
-    zIndex: -1,
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    top: 0,
+    left: 0,
+    zIndex: 999,
+    elevation: 0,
   },
 });
 

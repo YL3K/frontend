@@ -13,6 +13,7 @@ function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setPasswordVisible] = useState(false);
   const [isFailModalVisible, setFailModalVisible] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
   const dispatch = useDispatch();
 
   const togglePasswordVisibility = () => {
@@ -33,6 +34,7 @@ function LoginScreen({ navigation }) {
 
         console.log(userInfo.accessToken);
   
+        setUserInfo(userInfo);
         // 토큰을 저장하고, Redux에 사용자 정보 저장
         dispatch(loadUser(userInfo));
 
@@ -40,8 +42,12 @@ function LoginScreen({ navigation }) {
         dispatch(setFcmToken(token));
 
         console.log('로그인 성공');
-        navigation.navigate('Main');
-
+        
+        if (userInfo.userType === 'customer') {
+          navigation.navigate('Main'); // 고객은 Main 화면으로 이동
+        } else if (userInfo.userType === 'counselor') {
+          navigation.navigate('Counsel'); // 상담사는 CounselWaiting 화면으로 이동
+        }
       } catch (error) {
         // console.error('로그인 실패:', error);
         setFailModalVisible(true);
