@@ -13,22 +13,21 @@ const VideoConsultScreen = () => {
   const candidateQueue = useRef([]); 
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
-  const userInform = useSelector((state) => state.user).user;
-
   const [expanded, setExpanded] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const animation = useRef(new Animated.Value(0)).current;
   const navigation = useNavigation();
+  const userInform = useSelector((state) => state.user.user);
 
   const userName = userInform.userName;
-  const customerId = "5";
-  const counselorId = "8";
+  const { customerId, counselorId } = useSelector((state) => state.counsel);
+  let roomId;
   const userType = userInform.userType;
 
   const createRoom = async () => {
     try {
-      await axios.post('http://10.0.2.2:8080/api/v1/counsel',
+      const response = await axios.post('http://10.0.2.2:8080/api/v1/counsel',
         {
           customerId,
           counselorId,
@@ -38,6 +37,7 @@ const VideoConsultScreen = () => {
             Authorization: `Bearer ${userInform.accessToken}`  
           },
         }); 
+      roomId = response.data.response.data
     } catch (error) {
       console.error('Error creating room:', error);
     }
@@ -61,14 +61,13 @@ const VideoConsultScreen = () => {
       const stream = await mediaDevices.getUserMedia({
         video: true,
         audio: true,
-      });
+      });      
 
       setLocalStream(stream);
       localStreamRef.current = stream;
       stream.getTracks().forEach((track) => {
         pcRef.current.addTrack(track, stream);
       });
-      console.log(userType + "> getMedia 완료");
     } catch (e) {
       console.error("Error accessing media devices:", e);
     }
@@ -78,7 +77,6 @@ const VideoConsultScreen = () => {
     wsRef.current = new WebSocket("ws://10.0.2.2:8080/ws");
 
     wsRef.current.onopen = () => {
-      console.log(userType + "> WebSocket connected");
       wsRef.current.send(
         JSON.stringify({
           type: "join_room",
@@ -115,7 +113,6 @@ const VideoConsultScreen = () => {
     wsRef.current.onclose = () => {
       console.log("WebSocket closed");
     };
-    console.log(userType + "> WebSocket 등록완");
   };
 
   const createPeerConnection = () => {
@@ -129,13 +126,6 @@ const VideoConsultScreen = () => {
         }
       ],
     });
-
-    pcRef.current.oniceconnectionstatechange = () => {
-      console.log(
-        userType + "ICE Connection State Changed:",
-        pcRef.current.iceConnectionState
-      );
-    };
 
     pcRef.current.onicecandidate = (e) => {
       if (e.candidate) {
@@ -152,14 +142,11 @@ const VideoConsultScreen = () => {
 
     pcRef.current.ontrack = (e) => {
       if (e.streams && e.streams[0]) {
-        console.log(userType, "$$$$$$ Track received, stream:", e.streams[0]);
         setRemoteStream(e.streams[0]);
       } else {
         console.error("No streams available in ontrack event");
       }
     };
-    
-    console.log(userType + "&&& RTC 생성 및 이벤트들 등록");
   };
 
   // A만 수행
@@ -175,7 +162,7 @@ const VideoConsultScreen = () => {
           sdp: offer,
         })
       );
-      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/start/${customerId+"_"+counselorId}`,{}, {
+      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/start/${roomId}`,{}, {
         headers: {
           Authorization: `Bearer ${userInform.accessToken}`  
         }
@@ -187,7 +174,6 @@ const VideoConsultScreen = () => {
 
   // B만 수행
   const handleOffer = async (message) => {
-    console.log(userType, "오퍼 받음#######3 앤서 날림", message)
     try {
       await pcRef.current.setRemoteDescription(
         new RTCSessionDescription({ type: "offer", sdp: message.sdp })
@@ -210,7 +196,6 @@ const VideoConsultScreen = () => {
 
   // A만 수행
   const handleAnswer = async (sdp) => {
-    console.log(userType, "######33앤써 받음")
     try {
       await pcRef.current.setRemoteDescription(
         new RTCSessionDescription({ type: "answer", sdp: sdp })
@@ -246,7 +231,7 @@ const VideoConsultScreen = () => {
 
   const endSession = async () => {
     try {
-      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/end/${customerId+"_"+counselorId}`,{}, {
+      await axios.patch(`http://10.0.2.2:8080/api/v1/counsel/end/${roomId}`,{}, {
         headers: {
           Authorization: `Bearer ${userInform.accessToken}`  
         }
@@ -324,7 +309,7 @@ const VideoConsultScreen = () => {
       <Animated.View style={[styles.btnscontainer, { width: menuWidth }]}>
 
         <TouchableOpacity style={styles.toggleButton} onPress={toggleMenu}>
-          <Icon name={expanded ? 'menu-left' : 'menu-right'} size={24} color="black" />
+          <Icon name={expanded ? 'menu-right' : 'menu-left'} size={24} color="black" />
         </TouchableOpacity>
 
         <Animated.View style={[styles.menuItems, { opacity: menuItemsOpacity }]}>
@@ -364,25 +349,24 @@ const VideoConsultScreen = () => {
       </Animated.View>
       
       {localStream ? (
-        <RTCView
-          streamURL={localStream.toURL()}
+        <RTCView 
           style={styles.localVideo}
-          objectFit="contain"
+          streamURL={localStream.toURL()}
+          objectFit="cover"
         />
       ) : (
-        <View style={{backgroundColor:"blue"}}></View>
+        <View style={styles.localVideo}></View>
       )}
       
       {remoteStream ? (
-        <RTCView
+        <RTCView 
           streamURL={remoteStream.toURL()}
           style={styles.remoteVideo}
-          objectFit="contain"
+          objectFit="cover"
         />
       ) : (
-        <View style={{backgroundColor:"blue"}}></View>
+        <View style={styles.remoteVideo}></View>
       )}
-
     </View>
   );
 };
@@ -430,22 +414,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   localVideo: {
-    width: "30%",
-    height: "30%",
-    position: "absolute",
-    top: 10,
-    left: 10,
-    zIndex: 103,
-    elevation: 1,
+    width: "100%",
+    flex: 4,
   },
   remoteVideo: {
-    position: "absolute",
     width: "100%",
-    height: "100%",
-    top: 0,
-    left: 0,
-    zIndex: 999,
-    elevation: 0,
+    flex: 6,
   },
 });
 

@@ -3,13 +3,15 @@ import { View, TouchableOpacity, StyleSheet, Text, Modal, TouchableWithoutFeedba
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import WaitingModal from '../modal/WaitingModal';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import ReusableModal from '../modal/ReusableModal';
 import ReusableTwoBtnModal from '../modal/ReusableTwoBtnModal';
+import { setCustomerAndCounselor } from '../../actions/counselActions';
 
 const HomeHeader = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   // 1. HomeHeader 관련
   const [isCounselingStarted, setIsCounselingStarted] = useState(false); // 상담 시작 여부 상태 관리
@@ -114,6 +116,10 @@ const HomeHeader = () => {
         // 예 누르면 navigation.navigate('Counsel', {screen:'VideoConsult'});
         // 아니오 누르면 새로운 알람 뜨면서 상담이 취소되었습니다.
         setConnectModalVisiable(true);
+        
+        // 여기서 고객이 웹소켓 받아와야하는뎅 message.counselorId이면 얻을 수 있을듯
+        const counselorId = message.counselorId
+        dispatch(setCustomerAndCounselor(userId, counselorId));
       }
     };
 
