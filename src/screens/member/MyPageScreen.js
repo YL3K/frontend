@@ -13,13 +13,9 @@ function MyPageScreen({ navigation }) {
   const [isModalVisible, setModalVisible] = useState(false);
 
   const closeModal = () => {
-    // setModalVisible(false);
-    // navigation.navigate('Login');
+    setModalVisible(false);
+    navigation.navigate('Login');
     dispatch(logoutUser()); // 로그아웃 시 Redux 상태 초기화
-    navigation.reset({
-      index: 0, // 첫 번째 화면으로 설정
-      routes: [{ name: 'Member', params: { screen: 'Login' } }], // 'Member'의 'Login' 화면으로 이동
-    });
   };
 
   const handleLogout = () => {

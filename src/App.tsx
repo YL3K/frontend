@@ -2,11 +2,12 @@ import 'react-native-gesture-handler'; // 최상단에 추가
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import MainStackNavigator from './navigation/MainStackNavigator.js';
+import MemberNavigator from './navigation/Stack/MemberNavigator.js';
 import { Provider } from 'react-redux';
 import store from './store/store.js';
 import messaging from '@react-native-firebase/messaging';
 import ReusableModal from './components/modal/ReusableModal.js';
+
 
 const Stack = createStackNavigator();
 
@@ -36,7 +37,7 @@ function App() {
   return (
     <Provider store={store}>
       <NavigationContainer>
-        <MainStackNavigator />
+        <MemberNavigator />
         <ReusableModal
           isVisible={isModalVisible}
           onClose={onCloseModal}
