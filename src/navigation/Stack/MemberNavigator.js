@@ -7,7 +7,9 @@ import SignUpScreen from '../../screens/member/SignUpScreen';
 import ConfirmScreen from '../../screens/member/ConfirmScreen';
 import MyPageScreen from '../../screens/member/MyPageScreen';
 import LogoHeader from '../../components/header/LogoHeader';
+import RecordNavigator from '../Stack/RecordNavigator.js';
 import { useSelector } from 'react-redux';
+
 
 const Stack = createStackNavigator();
 
@@ -29,6 +31,7 @@ function MemberNavigator() {
       <Stack.Screen name="SignUp" component={SignUpScreen} />
       <Stack.Screen name="Confirm" component={ConfirmScreen}/>
       <Stack.Screen name="Mypage" component={MyPageScreen} />
+      <Stack.Screen name="RecordMain" component={RecordNavigator} options={{headerShown: false}}/>
     </Stack.Navigator>
   );
 }

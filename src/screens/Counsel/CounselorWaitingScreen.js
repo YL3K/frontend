@@ -9,12 +9,56 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setCustomerAndCounselor } from '../../actions/counselActions';
 import { loadUser } from '../../actions/userActions';
 
+
+
+
 function CounselorWaitingScreen({ navigation }) {
 
   const user = useSelector((state) => state.user?.user);
   const userId = useSelector((state) => state.user.user?.userId);
   const counselorName = useSelector((state) => state.user.user?.userName);
   const [waitingQueue, setWaitingQueue] = useState([]); // 대기열 상태
+
+
+    const fetchMonthlyConsultationCount = async (year, month) => {
+        try {
+            const response = await axios.get(
+                `http://10.0.2.2:8080/api/record/monthCount?choiceDate=${year}-${String(month).padStart(2, '0')}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${user.accessToken}`,
+                    },
+                }
+            );
+            return response.data.response.data.count;
+        } catch (error) {
+            console.error('Error fetching monthly consultation count:', error);
+            return 0;
+        }
+    };
+
+    const fetchRecentCustomer = async () => {
+        try {
+            const response = await axios.get('http://10.0.2.2:8080/api/record/recentCustomer', {
+                headers: {
+                    Authorization: `Bearer ${user.accessToken}`,
+                },
+            });
+            return response.data.response.data;
+        } catch (error) {
+            console.error('Error fetching recent customer:', error);
+            return { customerName: '', customerDate: '' };
+        }
+    };
+
+    const formatDate = (isoDateString) => {
+        const date = new Date(isoDateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year} / ${month} / ${day}`; // 원하는 출력 형식대로 수정 가능
+    };
+
 
   // 컴포넌트가 마운트될 때 WebSocket 연결 설정
   useEffect(() => {
@@ -55,7 +99,6 @@ function CounselorWaitingScreen({ navigation }) {
   // 2.상담사 폰화면
     const [year, setYear] = useState(null);
     const [month, setMonth] = useState(null);
-    const consultationsThisMonth = 151;
     const userInform = useSelector((state) => state.user).user;
     const [isCameraChecked, setIsCameraChecked] = useState(false);
     const [isMicChecked, setIsMicChecked] = useState(false);
@@ -64,15 +107,31 @@ function CounselorWaitingScreen({ navigation }) {
     const dispatch = useDispatch();
 
     const [waitingList, setWaitingList] = useState([]); 
+    const [consultationsThisMonth, setConsultationsThisMonth] = useState(0); // 월별 상담 건수
+    const [recentCustomer, setRecentCustomer] = useState({ customerName: '', customerDate: '' }); // 최근 상담 고객
 
-    useEffect(async() => {
-        const date = new Date();
-        setYear(date.getFullYear()); 
-        setMonth(date.getMonth() + 1); 
-        // 해당 년, 달의 상담 수 갱신
-        requestPermissions();
-        await getWaitingListAPI();
-    }, [])
+
+    useEffect(() => {
+        const initializeData = async () => {
+          const date = new Date();
+          const currentYear = date.getFullYear();
+          const currentMonth = date.getMonth() + 1;
+      
+          setYear(currentYear);
+          setMonth(currentMonth);
+      
+          // 월별 상담 수와 최근 상담 데이터 가져오기
+          const count = await fetchMonthlyConsultationCount(currentYear, currentMonth);
+          setConsultationsThisMonth(count);
+      
+          const recentCustomer = await fetchRecentCustomer();
+          setRecentCustomer(recentCustomer);
+        };
+      
+        initializeData();
+        requestPermissions(); // 권한 요청
+      }, []);
+      
 
     useEffect(() => {
         setIsStartButtonEnabled(isCameraChecked && isMicChecked && isQueueAvailable);
@@ -101,17 +160,30 @@ function CounselorWaitingScreen({ navigation }) {
         await checkAndRequestPermission(micPermission, setIsMicChecked);
     }
   
-    const handlePreviousMonth = () => {
-        setMonth(prevMonth => (prevMonth === 1 ? 12 : prevMonth - 1));
-        setYear(prevYear => (month === 1 ? prevYear - 1 : prevYear));
-        // 상담 수 갱신
-    };
+    const handlePreviousMonth = async () => {
+        const newMonth = month === 1 ? 12 : month - 1;
+        const newYear = month === 1 ? year - 1 : year;
       
-    const handleNextMonth = () => {
-        setMonth(prevMonth => (prevMonth === 12 ? 1 : prevMonth + 1));
-        setYear(prevYear => (month === 12 ? prevYear + 1 : prevYear));
-        // 상담 수 갱신
-    };
+        setMonth(newMonth);
+        setYear(newYear);
+      
+        // 월별 상담 수 갱신
+        const count = await fetchMonthlyConsultationCount(newYear, newMonth);
+        setConsultationsThisMonth(count);
+      };
+      
+      const handleNextMonth = async () => {
+        const newMonth = month === 12 ? 1 : month + 1;
+        const newYear = month === 12 ? year + 1 : year;
+      
+        setMonth(newMonth);
+        setYear(newYear);
+      
+        // 월별 상담 수 갱신
+        const count = await fetchMonthlyConsultationCount(newYear, newMonth);
+        setConsultationsThisMonth(count);
+      };
+      
 
     const handleCustomerAssign = async () => {
         await customerAssignAPI();
@@ -194,29 +266,29 @@ function CounselorWaitingScreen({ navigation }) {
                 </Text>
             </TouchableOpacity>
         
-            <View style={styles.containerBox} >
+            <View style={styles.containerBox}>
                 <Text>월별 상담 횟수</Text>
                 <View style={styles.monthlyConsultation}>
                     <TouchableOpacity onPress={handlePreviousMonth}>
-                    <Icon name="chevron-left" size={24} color="black" />
+                        <Icon name="chevron-left" size={24} color="black" />
                     </TouchableOpacity>
                     <Text style={styles.monthText}>{year}년 {month}월</Text>
                     <TouchableOpacity onPress={handleNextMonth}>
-                    <Icon name="chevron-right" size={24} color="black" />
+                        <Icon name="chevron-right" size={24} color="black" />
                     </TouchableOpacity>
                     <Text style={styles.consultationCount}>{consultationsThisMonth}건</Text>
                 </View>
             </View>
 
+
             <View style={styles.containerBox}>
-                <Text style={styles.titleText}>
-                    최근 상담목록
-                </Text>
+                <Text style={styles.titleText}>최근 상담목록</Text>
                 <View style={styles.rowItem}>
-                <Text>김*민 고객님</Text>
-                <Text>2024.10.15 20:20:00</Text>
+                    <Text>{recentCustomer.customerName}</Text>
+                    <Text>{recentCustomer.customerDate ? formatDate(recentCustomer.customerDate) : ''}</Text>
                 </View>
             </View>
+
 
             <View style={[styles.rowItem, {marginTop: 10, marginBottom: 10}]}>
                 <CheckItem label="카메라 체크" isChecked={isCameraChecked} />
