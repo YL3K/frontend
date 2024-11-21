@@ -318,6 +318,7 @@ function AnalysisScreen() {
     <ScrollView style={styles.container}>
       {/* 고객 연령층 Section */}
       <Text style={styles.title}>고객 연령층</Text>
+      <Text style={styles.description}>화상 상담을 이용한 고객님의 연령대를 나타내는 데이터입니다</Text>
       <View style={styles.chartContainer}>
         <View style={styles.radioContainer}>
           <TouchableOpacity 
@@ -392,6 +393,7 @@ function AnalysisScreen() {
 
       {/* 키워드 빈도 Section */}
       <Text style={styles.title}>키워드 빈도</Text>
+      <Text style={styles.description}>화상 상담에서 가장 많이 조회된 키워드입니다</Text>
       <View style={styles.chartStyle}>
         <TouchableOpacity
           style={styles.chartStyleButton}
@@ -487,6 +489,7 @@ function AnalysisScreen() {
 
       {/* 상담 발생 시각 차트 */}
       <Text style={styles.title}>상담 발생 시각</Text>
+      <Text style={styles.description}>화상 상담 요청이 많은 시간대를 나타낸 차트입니다</Text>
       <View style={styles.chartContainer}>
         <View style={styles.radioContainer}>
           <TouchableOpacity
@@ -558,6 +561,7 @@ function AnalysisScreen() {
 
       {/* 상담 평균 진행 시간 차트 */}
       <Text style={styles.title}>상담 평균 시간</Text>
+      <Text style={styles.description}>월별 화상 상담 이용자들의 상담 평균 진행 시간입니다</Text>
       <View style={styles.dateContainer}>
         <TouchableOpacity style={styles.dateButton} onPress={() => setStartPickerVisible(true)}>
           <Text style={styles.buttonText}>시작 : {startYearMonth}</Text>
@@ -604,6 +608,7 @@ function AnalysisScreen() {
 
       {/* 월별 상담 건수 데이터 */}
       <Text style={styles.title}>상담 건수</Text>
+      <Text style={styles.description}>월별 상담 진행 건수를 나타낸 차트입니다</Text>
       <View style={styles.dateContainer}>
         <TouchableOpacity style={styles.dateButton} onPress={() => setStartCountPickerVisible(true)}>
           <Text style={styles.buttonText}>시작 : {startYearMonthCount}</Text>
@@ -661,7 +666,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginTop: 30,
+    marginHorizontal: 5,
+  },
+  description: {
+    fontSize: 14,
     marginVertical: 15,
+    marginHorizontal: 5,
   },
   loaderContainer: {
     backgroundColor: '#fff',
@@ -702,6 +713,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     height: 40,
     textAlignVertical: 'center',
+    fontSize: 13,
   },
   dateContainer: {
     flexDirection: 'row',
