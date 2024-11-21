@@ -5,7 +5,14 @@ import { Dimensions, View, Text, StyleSheet } from 'react-native';
 const screenWidth = Dimensions.get('window').width;
 
 const CountChart = ({ data }) => {
-  const labels = data.map((item, index) => (index % 2 === 0 ? item.yearMonth.slice(5) : ''));
+  //년도 또는 월별 정렬
+  const sortedData = data.sort((a, b) => new Date(a.yearMonth) - new Date(b.yearMonth));
+  const maxLabels = 15;
+  const step = Math.ceil(sortedData.length / maxLabels); //라벨을 건너뛰는 간격 계산
+  const labels = sortedData.map((item, index) =>
+    index % step === 0 ? item.yearMonth.slice(5) : ''
+  );
+  
   const chartData = data.map(item => item.count);
   const [selectedData, setSelectedData] = useState(null);
 
