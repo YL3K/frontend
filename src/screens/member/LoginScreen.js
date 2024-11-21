@@ -44,9 +44,9 @@ function LoginScreen({ navigation }) {
         console.log('로그인 성공');
         
         if (userInfo.userType === 'customer') {
-          navigation.navigate('Main'); // 고객은 Main 화면으로 이동
+          navigation.navigate('CustomerMain'); // 고객은 Main 화면으로 이동
         } else if (userInfo.userType === 'counselor') {
-          navigation.navigate('Counsel'); // 상담사는 CounselWaiting 화면으로 이동
+          navigation.navigate('CounselMain'); // 상담사는 CounselWaiting 화면으로 이동
         }
       } catch (error) {
         // console.error('로그인 실패:', error);

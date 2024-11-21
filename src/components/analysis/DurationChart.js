@@ -67,7 +67,7 @@ const DurationChart = ({ data }) => {
             stroke: '#007bff',
           },
         }}
-        bezier
+        // bezier
         style={{
           marginVertical: 8,
           borderRadius: 16,
